@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.ledger/
+*.log
+
+# secrets — keys live in the macOS Keychain, never on disk
+.env
+*.key
+*keypair*.json
+deployer-keypair.json
+
+# rust/anchor build output
+phantom_escrow/target/
+phantom_escrow/.anchor/
+
+.DS_Store
+
+# NOTE: data/ is deliberately NOT ignored.
+# data/replay-18237038-scores.sse is the 1,027-event capture of the Jul-14 semi-final and it is
+# load-bearing: TxLINE's /api/scores/historical only serves a two-week window, so this match ages
+# out of the API around 28 Jul — the day before judging on the 29th. Without it committed, nobody
+# (including the judges) can reproduce the replay. It ships.

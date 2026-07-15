@@ -1,0 +1,30 @@
+{
+  "name": "phantom",
+  "version": "1.0.0",
+  "description": "A prop-bet escrow that cannot pay out on a goal that did not happen. TxODDS x Solana World Cup Hackathon.",
+  "main": "index.js",
+  "scripts": {
+    "replay": "tsx src/replay.ts",
+    "verify": "tsx src/verify.ts",
+    "demo": "tsx src/demo.ts",
+    "live": "tsx src/live.ts",
+    "subscribe": "node subscribe.mjs",
+    "build:web": "tsx src/export-demo.ts && tsx src/build-web.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.98.4",
+    "bs58": "^6.0.0",
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  },
+  "type": "module"
+}

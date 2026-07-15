@@ -1,0 +1,236 @@
+{
+  "generatedFrom": "TxLINE /api/scores/historical/18237038 (captured live 2026-07-15)",
+  "fixture": {
+    "id": 18237038,
+    "name": "France v Spain",
+    "stage": "World Cup semi-final",
+    "date": "2026-07-14"
+  },
+  "prop": {
+    "label": "Spain total goals > 2",
+    "market": "over 2.5 Spain goals",
+    "statKey": 2,
+    "period": 100,
+    "threshold": 2
+  },
+  "eventCount": 1027,
+  "timeline": [
+    {
+      "ts": 1784058256078,
+      "time": "19:44:16",
+      "action": "action_discarded",
+      "confirmed": null,
+      "seq": 405,
+      "scoreCarried": false,
+      "spain": 1,
+      "france": 0,
+      "propTrue": false
+    },
+    {
+      "ts": 1784058685343,
+      "time": "19:51:25",
+      "action": "action_discarded",
+      "confirmed": null,
+      "seq": 474,
+      "scoreCarried": false,
+      "spain": 1,
+      "france": 0,
+      "propTrue": false
+    },
+    {
+      "ts": 1784060376027,
+      "time": "20:19:36",
+      "action": "goal",
+      "confirmed": false,
+      "seq": 617,
+      "scoreCarried": false,
+      "spain": 2,
+      "france": 0,
+      "propTrue": false
+    },
+    {
+      "ts": 1784060478302,
+      "time": "20:21:18",
+      "action": "goal",
+      "confirmed": true,
+      "seq": 618,
+      "scoreCarried": false,
+      "spain": 2,
+      "france": 0,
+      "propTrue": false
+    },
+    {
+      "ts": 1784060481148,
+      "time": "20:21:21",
+      "action": "goal",
+      "confirmed": true,
+      "seq": 620,
+      "scoreCarried": false,
+      "spain": 2,
+      "france": 0,
+      "propTrue": false
+    },
+    {
+      "ts": 1784060549958,
+      "time": "20:22:29",
+      "action": "goal",
+      "confirmed": false,
+      "seq": 638,
+      "scoreCarried": false,
+      "spain": 3,
+      "france": 0,
+      "propTrue": true
+    },
+    {
+      "ts": 1784060561485,
+      "time": "20:22:41",
+      "action": "var",
+      "confirmed": false,
+      "seq": 639,
+      "scoreCarried": true,
+      "spain": 3,
+      "france": 0,
+      "propTrue": true
+    },
+    {
+      "ts": 1784060562861,
+      "time": "20:22:42",
+      "action": "var",
+      "confirmed": true,
+      "seq": 640,
+      "scoreCarried": true,
+      "spain": 3,
+      "france": 0,
+      "propTrue": true
+    },
+    {
+      "ts": 1784060573720,
+      "time": "20:22:53",
+      "action": "var_end",
+      "confirmed": true,
+      "seq": 641,
+      "scoreCarried": false,
+      "spain": 3,
+      "france": 0,
+      "propTrue": true
+    },
+    {
+      "ts": 1784060575609,
+      "time": "20:22:55",
+      "action": "action_discarded",
+      "confirmed": null,
+      "seq": 642,
+      "scoreCarried": false,
+      "spain": 2,
+      "france": 0,
+      "propTrue": false
+    },
+    {
+      "ts": 1784061929766,
+      "time": "20:45:29",
+      "action": "action_discarded",
+      "confirmed": null,
+      "seq": 866,
+      "scoreCarried": false,
+      "spain": 2,
+      "france": 0,
+      "propTrue": false
+    },
+    {
+      "ts": 1784063054751,
+      "time": "21:04:14",
+      "action": "game_finalised",
+      "confirmed": null,
+      "seq": 1026,
+      "scoreCarried": false,
+      "spain": 2,
+      "france": 0,
+      "propTrue": false
+    }
+  ],
+  "phantom": {
+    "publishedAt": "20:22:29",
+    "discardedAt": "20:22:55",
+    "durationSeconds": 26,
+    "scoreDuring": "0-3",
+    "scoreActual": "0-2"
+  },
+  "naive": {
+    "time": "20:22:29",
+    "state": "SETTLED",
+    "reason": "stream says \"Spain total goals > 2\" is true (action=goal) -> PAY OUT"
+  },
+  "guarded": {
+    "state": "RETRACTED",
+    "decisions": [
+      {
+        "time": "20:22:29",
+        "state": "PROVISIONAL",
+        "reason": "\"Spain total goals > 2\" reads true but event is PROVISIONAL (Confirmed:false) -> UI only, money HELD"
+      },
+      {
+        "time": "20:22:41",
+        "state": "PROVISIONAL",
+        "reason": "VAR review OPEN -> gate BLOCKED, no promotion possible"
+      },
+      {
+        "time": "20:22:53",
+        "state": "PROVISIONAL",
+        "reason": "VAR review closed -> gate re-armed (awaiting the corrected score)"
+      },
+      {
+        "time": "20:22:55",
+        "state": "RETRACTED",
+        "reason": "RETRACTION: the event backing \"Spain total goals > 2\" was withdrawn. Score reverts. No payout."
+      },
+      {
+        "time": "21:04:14",
+        "state": "RETRACTED",
+        "reason": "game_finalised -> \"Spain total goals > 2\" is FALSE on the final record. Refund."
+      }
+    ]
+  },
+  "truth": {
+    "finalisedAt": "21:04:14",
+    "spainGoals": 2,
+    "franceGoals": 0,
+    "propTrue": false
+  },
+  "onchain": {
+    "mainnetOracle": "9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA",
+    "devnetOracle": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J",
+    "scoresRoot": "CA9P9cpaaHLML54f7HpDjJPtknyTAbaKs8uaoZruuAfs",
+    "epochDay": 20648,
+    "anchoringLagMinutes": 1.4,
+    "verdicts": [
+      {
+        "question": "Spain goals > 2  (the phantom 3rd goal)",
+        "answer": false
+      },
+      {
+        "question": "Spain goals > 1  (control: they scored 2)",
+        "answer": true
+      }
+    ]
+  },
+  "guards": [
+    {
+      "n": 1,
+      "name": "Fixture binding",
+      "blocks": "a valid proof from a different match",
+      "error": "FixtureMismatch"
+    },
+    {
+      "n": 2,
+      "name": "Finality",
+      "blocks": "an honest half-time proof settling a full-match prop early",
+      "error": "ProofNotFinal"
+    },
+    {
+      "n": 3,
+      "name": "Predicate binding",
+      "blocks": "the settler swapping the question to one they win",
+      "error": "PredicateMismatch"
+    }
+  ]
+}

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHANTOM — the feed said 0-3. It was never 0-3.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* Monochrome. No status colours, no accent.
+     The only signal is weight, strike and opacity — the phantom is struck and faded,
+     the truth is white and large. If a distinction needs a colour to be legible,
+     it wasn't designed. Structure follows sorare.com's near-black + heavy uppercase
+     grotesk + card radii; the palette does not. */
+  :root{
+    --base:#0A0A0A; --surface:#131313; --raise:#1C1C1C;
+    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
+    --ink:#FFFFFF; --mute:#8C8C8C; --dim:#4E4E4E; --faint:#2E2E2E;
+    --r-pill:40px; --r-card:16px; --r-sm:6px; --r-xs:3px;
+    --display:'Archivo',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--base);color:var(--ink);font-family:var(--display);font-weight:400;
+       -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 28px}
+
+  nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,.88);backdrop-filter:blur(14px);
+      border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
+  .mark{font-weight:900;letter-spacing:-.03em;font-size:18px;text-transform:uppercase}
+  .mark s{text-decoration:none;position:relative}
+  .mark s:after{content:"";position:absolute;left:0;right:0;top:52%;height:2px;background:var(--ink)}
+  .chip{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+        padding:7px 12px;border-radius:var(--r-pill);border:1px solid var(--line-2);color:var(--mute)}
+
+  header{padding:88px 0 64px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:26px}
+  h1{font-size:clamp(42px,8vw,98px);font-weight:900;line-height:.9;letter-spacing:-.04em;text-transform:uppercase}
+  h1 .ghost{color:var(--dim);position:relative;white-space:nowrap}
+  h1 .ghost:after{content:"";position:absolute;left:-1%;right:-1%;top:52%;height:6px;background:var(--dim);border-radius:1px}
+  .lede{margin-top:28px;max-width:62ch;font-size:17px;line-height:1.65;color:var(--mute)}
+  .lede b{color:var(--ink);font-weight:700}
+
+  .board{margin-top:48px;border:1px solid var(--line);border-radius:var(--r-card);
+         padding:40px 32px;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .board .teams{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:18px}
+  .board .was{font-family:var(--mono);font-weight:700;font-size:clamp(24px,3.4vw,34px);color:var(--faint);
+              position:relative;display:inline-block}
+  .board .was:after{content:"";position:absolute;left:-10%;right:-10%;top:50%;height:3px;background:var(--faint)}
+  .board .waslbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-top:6px}
+  .board .now{font-family:var(--mono);font-weight:700;font-size:clamp(56px,10vw,96px);letter-spacing:-.04em;margin-top:22px;line-height:1}
+  .board .nowlbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px}
+
+  section{padding:76px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:clamp(24px,3.6vw,40px);font-weight:900;text-transform:uppercase;letter-spacing:-.035em;line-height:1}
+  .sub{margin-top:16px;color:var(--mute);font-size:16px;line-height:1.65;max-width:68ch}
+  .sub b{color:var(--ink);font-weight:700}
+
+  .tl{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .tl .r{display:grid;grid-template-columns:92px 1fr auto;gap:18px;align-items:center;
+         padding:14px 20px;border-bottom:1px solid var(--line)}
+  .tl .r:last-child{border-bottom:0}
+  .tl .r.ph{background:var(--surface)}
+  .tl .r.ph .a,.tl .r.ph .s{color:var(--ink)}
+  .tl .r.dim .a,.tl .r.dim .s{color:var(--dim)}
+  .tl .t{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .tl .a{font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:.04em;color:var(--mute)}
+  .tl .s{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--mute)}
+  .tl .r.ph .s{position:relative}
+  .tag{font-family:var(--mono);font-size:9px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;
+       padding:3px 7px;border-radius:var(--r-xs);border:1px solid var(--line-2);color:var(--dim);margin-left:9px}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:36px;background:var(--line);
+       border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .card{background:var(--base);padding:32px}
+  .card.bad{background:var(--surface)}
+  .card .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .card .v{font-size:clamp(30px,4.4vw,46px);font-weight:900;text-transform:uppercase;letter-spacing:-.03em;margin-top:12px;line-height:1}
+  .card.good .v{color:var(--ink)}
+  .card.bad .v{color:var(--ink)}
+  .card.bad .v s{text-decoration:none;position:relative}
+  .card.bad .v s:after{content:"";position:absolute;left:-2%;right:-2%;top:53%;height:5px;background:var(--ink)}
+  .card p{margin-top:14px;color:var(--mute);font-size:14px;line-height:1.6}
+  .card .when{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:16px}
+
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:36px;background:var(--line);
+         border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .g{background:var(--base);padding:28px}
+  .g .n{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.12em}
+  .g h3{margin-top:14px;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em}
+  .g p{margin-top:10px;color:var(--mute);font-size:14px;line-height:1.6}
+  .g code{display:inline-block;margin-top:16px;font-family:var(--mono);font-size:10px;color:var(--dim);
+          border:1px solid var(--line-2);padding:5px 9px;border-radius:var(--r-xs)}
+
+  .chain{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .chain .q{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:22px 24px;
+            border-bottom:1px solid var(--line)}
+  .chain .q:last-child{border-bottom:0}
+  .chain .qt{font-family:var(--mono);font-size:13px;color:var(--mute)}
+  .chain .qa{font-family:var(--mono);font-weight:700;font-size:18px;letter-spacing:.06em}
+  .chain .qa.f{color:var(--ink)}
+  .chain .qa.t{color:var(--dim)}
+  .meta{margin-top:24px;display:flex;flex-wrap:wrap;gap:8px}
+  .meta span{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px solid var(--line);
+             padding:6px 11px;border-radius:var(--r-pill)}
+
+  footer{padding:60px 0 90px;color:var(--dim);font-size:13px;line-height:1.85}
+  footer b{color:var(--mute);font-weight:700}
+  footer code{font-family:var(--mono);font-size:11px;color:var(--mute)}
+
+  @media(max-width:820px){
+    .wrap{padding:0 18px}
+    .two,.three{grid-template-columns:1fr}
+    /* Stack: time on its own line, then the event, then the score. The tags must wrap
+       rather than push the row past the viewport. */
+    .tl .r{grid-template-columns:1fr;row-gap:7px;padding:16px 16px}
+    .tl .a{display:flex;flex-wrap:wrap;align-items:center;gap:6px;line-height:1.35}
+    .tag{margin-left:0}
+    .tl .s{justify-self:start;font-size:17px}
+    .board{padding:30px 20px}
+    header{padding:56px 0 48px}
+    section{padding:56px 0}
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <div class="mark">Ph<s>antom</s></div>
+  <div style="display:flex;gap:8px">
+    <div class="chip">Solana · devnet</div>
+    <div class="chip">No wallet required</div>
+  </div>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1>The feed said <span class="ghost" id="h-was"></span>.<br>It was never <span id="h-was2"></span>.</h1>
+  <p class="lede" id="lede"></p>
+  <div class="board">
+    <div class="teams" id="teams"></div>
+    <div class="was" id="b-was"></div>
+    <div class="waslbl">what the feed asserted for 26 seconds</div>
+    <div class="now" id="b-now"></div>
+    <div class="nowlbl" id="b-nowlbl"></div>
+  </div>
+</div></header>
+
+<section><div class="wrap">
+  <h2>The 26 seconds</h2>
+  <p class="sub">Straight from TxLINE's score feed. A goal is published unconfirmed, the scoreline moves, VAR reviews it, and it is withdrawn. The score goes up and then comes back down. Rows in <b>white</b> are the phantom standing.</p>
+  <div class="tl" id="tl"></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Two engines, one feed</h2>
+  <p class="sub">The brief suggests using the SSE stream to “dynamically trigger prediction resolutions”. Here is what that does, on this match, on this prop: <b id="prop-lbl"></b>.</p>
+  <div class="two" id="engines"></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Verifying the proof is not enough</h2>
+  <p class="sub">A Merkle proof is honest, but it answers whatever question you ask, about whatever batch you hand it. Every attack below uses a genuine, valid, unforged TxLINE proof. They are defeated by binding, not by cryptography.</p>
+  <div class="three" id="guards"></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>The chain disagrees with the stream</h2>
+  <p class="sub">Asked of TxLINE's own oracle by cross-program invocation, against the real anchored Merkle roots for this match.</p>
+  <div class="chain" id="chain"></div>
+  <div class="meta" id="meta"></div>
+</div></section>
+
+<footer><div class="wrap" id="foot"></div></footer>
+
+<script>
+const D = /*__DATA__*/ null;
+const $ = (id) => document.getElementById(id);
+const dash = (s) => s.replace('-', '–');
+
+$('eyebrow').textContent = `${D.fixture.stage} · ${D.fixture.name} · ${D.fixture.date} · fixture ${D.fixture.id}`;
+$('h-was').textContent = dash(D.phantom.scoreDuring);
+$('h-was2').textContent = dash(D.phantom.scoreDuring);
+$('lede').innerHTML = `For <b>${D.phantom.durationSeconds} seconds</b> TxLINE's live feed asserted a scoreline that never existed. `
+  + `A settlement engine reading the stream in that window released funds on a goal that was erased `
+  + `${D.phantom.durationSeconds} seconds later. On-chain, that cannot be undone.`;
+$('teams').textContent = D.fixture.name.replace(' v ', '  ·  ');
+$('b-was').textContent = dash(D.phantom.scoreDuring);
+$('b-now').textContent = dash(D.phantom.scoreActual);
+$('b-nowlbl').textContent = `final · game_finalised ${D.truth.finalisedAt}`;
+$('prop-lbl').textContent = D.prop.label;
+
+const NAMES = { goal:'Goal', var:'VAR review opened', var_end:'VAR review closed', action_discarded:'Action discarded', game_finalised:'Game finalised' };
+$('tl').innerHTML = D.timeline.map(e => {
+  const standing = e.spain === 3;                       // the phantom is up
+  const noise = !standing && e.action === 'action_discarded' && e.time < '20:00:00';
+  const cls = standing ? 'r ph' : noise ? 'r dim' : 'r';
+  const tag = e.confirmed === false ? '<span class="tag">provisional</span>'
+            : e.confirmed === true ? '<span class="tag">confirmed</span>' : '';
+  const carried = e.scoreCarried ? '<span class="tag">inherited</span>' : '';
+  return `<div class="${cls}"><span class="t">${e.time}</span>`
+       + `<span class="a">${NAMES[e.action] || e.action}${tag}${carried}</span>`
+       + `<span class="s">${e.france}–${e.spain}</span></div>`;
+}).join('');
+
+$('engines').innerHTML = `
+  <div class="card bad">
+    <div class="k">Settled from the stream</div>
+    <div class="v"><s>Paid out</s></div>
+    <p>Released the pot on the provisional goal. ${D.phantom.durationSeconds} seconds later VAR erased it. The money is gone and the chain will not give it back.</p>
+    <div class="when">${D.naive.time} · ${D.naive.state}</div>
+  </div>
+  <div class="card good">
+    <div class="k">Settled from the proof</div>
+    <div class="v">Held</div>
+    <p>Never promoted the provisional goal. Blocked while VAR was open. Released nothing, and was proved right at the final whistle.</p>
+    <div class="when">${D.truth.finalisedAt} · prop resolved ${String(D.truth.propTrue).toUpperCase()}</div>
+  </div>`;
+
+$('guards').innerHTML = D.guards.map(g => `
+  <div class="g"><div class="n">Guard ${g.n} / 3</div><h3>${g.name}</h3><p>Blocks ${g.blocks}.</p><code>${g.error}</code></div>`).join('');
+
+$('chain').innerHTML = D.onchain.verdicts.map(v => `
+  <div class="q"><span class="qt">${v.question}</span><span class="qa ${v.answer ? 't' : 'f'}">${String(v.answer).toUpperCase()}</span></div>`).join('');
+
+$('meta').innerHTML = [
+  `oracle ${D.onchain.devnetOracle.slice(0,10)}…`,
+  `scores root ${D.onchain.scoresRoot.slice(0,10)}…`,
+  `epoch day ${D.onchain.epochDay}`,
+  `anchoring lag ${D.onchain.anchoringLagMinutes} min`,
+  `${D.eventCount} feed events`,
+].map(s => `<span>${s}</span>`).join('');
+
+$('foot').innerHTML = `
+  <b>Data</b>: ${D.generatedFrom}<br>
+  <b>Why this page needs no wallet</b>: TxLINE's free tier requires an on-chain subscribe transaction, and the
+  hackathon terms say judges shall not be required to establish a blockchain wallet. So this data was fetched once
+  with our subscription and frozen here. It is also insurance: /api/scores/historical serves only a two-week window,
+  so this match ages out of the API on ~28 Jul — the day before judging.<br>
+  <b>Reproduce</b>: <code>npm run replay</code> · <code>npm run verify</code> · <code>npm run demo</code>`;
+</script>
+</body>
+</html>
