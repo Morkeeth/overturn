@@ -45,8 +45,8 @@ keeper is the vulnerability. `phantom_escrow` has **no keeper and no admin key**
 moving money is a Merkle proof verified on-chain by CPI into `validate_stat_v2`.
 
 **2 · The question.** A valid proof answers *whatever question you ask it*. Our prop is
-"Spain goals > 2" — false, so the NO side wins. An attacker holding YES submits **the same honest,
-valid, final proof**, with the strategy changed to "Spain goals > 1" — true. The oracle answers
+"Spain goals > 2" is false, so the NO side wins. An attacker holding YES submits **the same honest,
+valid, final proof**, with the strategy changed to "Spain goals > 1", which is true. The oracle answers
 honestly. The attacker takes the pot. **No forgery, no phantom.** Any escrow that forwards a
 caller-supplied strategy to the oracle is drainable this way.
 
@@ -56,7 +56,7 @@ exists.
 
 ## The three guards
 
-`settle()` is permissionless — anyone may call it, because the caller has no discretion:
+`settle()` is permissionless: anyone may call it, because the caller has no discretion:
 
 | Guard | Blocks | Error |
 |---|---|---|
@@ -101,7 +101,7 @@ the data was fetched once with our subscription and frozen into the page. No ser
 wallet, no install. Open the file.
 
 It is also insurance: `/api/scores/historical` serves only a two-week window, so this match ages out
-of the API around 28 July — the day before judging.
+of the API around 28 July, the day before judging.
 
 ## TxLINE endpoints used
 

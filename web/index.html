@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PHANTOM — the feed said 0-3. It was never 0-3.</title>
+<title>PHANTOM: the feed said 0-3. It was never 0-3.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   /* Monochrome. No status colours, no accent.
-     The only signal is weight, strike and opacity — the phantom is struck and faded,
+     The only signal is weight, strike and opacity: the phantom is struck and faded,
      the truth is white and large. If a distinction needs a colour to be legible,
      it wasn't designed. Structure follows sorare.com's near-black + heavy uppercase
      grotesk + card radii; the palette does not. */
@@ -73,7 +73,7 @@
   .tag{font-family:var(--mono);font-size:9px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;
        padding:3px 7px;border-radius:var(--r-xs);border:1px solid var(--line-2);color:var(--dim);margin-left:9px}
 
-  /* schema-diff matrix — the centrepiece. mono, hairline, TxLINE row lifted. */
+  /* schema-diff matrix: the centrepiece. mono, hairline, TxLINE row lifted. */
   .matrix{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-card);overflow-x:auto}
   .matrix table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;min-width:620px}
   .matrix th{text-align:left;font-weight:400;color:var(--dim);font-size:11px;letter-spacing:.06em;
@@ -152,7 +152,8 @@
 
 <header><div class="wrap">
   <div class="eyebrow" id="eyebrow"></div>
-  <h1>The feed said <span class="ghost" id="h-was"></span>.<br>A proof says they published it — not that it happened.</h1>
+  <!-- DRAFT: hero voice, Oscar to finalize. Non-overclaim framing: a proof shows publication, not truth. -->
+  <h1>The feed said <span class="ghost" id="h-was"></span>.<br>A proof shows they published it, not that it happened.</h1>
   <p class="lede" id="lede"></p>
   <div class="board">
     <div class="teams" id="teams"></div>
@@ -173,7 +174,9 @@
   <h2>The gap no other feed can express</h2>
   <p class="sub">To settle a market that later gets corrected, a data feed's schema needs two things: an <b>as-of time</b> distinct from when it was published, and a <b>link</b> from a record to the one that supersedes it. We checked nine on-chain settlement systems. Every waiting period in all of them guards against a liar, not against the truth changing.</p>
   <div class="matrix" id="matrix"></div>
-  <p class="sub" style="margin-top:20px">TxLINE ships both — <code style="font-family:var(--mono);font-size:13px">Confirmed:false → action_discarded</code>, with a batch window that is not the publish time. That is the primitive the settlement layer was missing.</p>
+  <p class="sub" style="margin-top:20px">TxLINE ships both: <code style="font-family:var(--mono);font-size:13px">Confirmed:false → action_discarded</code>, with a batch window that is not the publish time. That is the primitive the settlement layer was missing.</p>
+  <p class="sub" style="margin-top:28px"><b>Instantiated, not asserted.</b> The two records from this match that carry the revision, by sequence number, so you can grep them in the frozen capture. Every value below is reproducible with <code style="font-family:var(--mono);font-size:13px">npm run replay</code>.</p>
+  <div class="chain" id="proofobj" style="margin-top:16px"></div>
 </div></section>
 
 <section><div class="wrap">
@@ -476,8 +479,7 @@ const dash = (s) => s.replace('-', '–');
 
 $('eyebrow').textContent = `${D.fixture.stage} · ${D.fixture.name} · ${D.fixture.date} · fixture ${D.fixture.id}`;
 $('h-was').textContent = dash(D.phantom.scoreDuring);
-$('h-was2').textContent = dash(D.phantom.scoreDuring);
-$('lede').innerHTML = `For <b>${D.phantom.durationSeconds} seconds</b> on 14 July, TxLINE's live feed asserted a scoreline that never existed — `
+$('lede').innerHTML = `For <b>${D.phantom.durationSeconds} seconds</b> on 14 July, TxLINE's live feed asserted a scoreline that never existed, `
   + `then VAR erased it. A Merkle root would have proved TxODDS <b>published</b> ${dash(D.phantom.scoreDuring)}. `
   + `It would not have proved it was <b>true</b>. Every on-chain oracle we checked can prove publication. `
   + `TxLINE's schema is the only one that can also say: <b>this was revised</b>.`;
@@ -496,6 +498,25 @@ $('matrix').innerHTML = `<table>
       <td>${mark(r.asOf)}</td><td>${mark(r.link)}</td><td>${mark(r.revision)}</td>
     </tr>`).join('')}</tbody>
 </table>`;
+
+// The revision, instantiated from the frozen capture. Every field is read straight from D
+// (which is the replayed feed), so a judge can cross-check each line against `npm run replay`.
+(() => {
+  const pub = D.timeline.find(e => e.action === 'goal' && e.confirmed === false && e.spain === 3);
+  const sup = D.timeline.find(e => e.action === 'action_discarded' && e.spain === 2 && e.seq > (pub ? pub.seq : 0));
+  const fin = D.truth;
+  if (!pub || !sup) { $('proofobj').innerHTML = ''; return; }
+  const rows = [
+    ['published record', `seq ${pub.seq} · ${pub.time} · Confirmed:false · ${dash('0-'+pub.spain)}`],
+    ['maturity flag ≠ timestamp', `the record is marked provisional at publish, before any correction exists`],
+    ['supersession link', `seq ${pub.seq} → seq ${sup.seq} · action_discarded · ${sup.time} · reverts to ${dash('0-'+sup.spain)}`],
+    ['final record', `game_finalised · ${fin.finalisedAt} · ${dash('0-'+fin.spainGoals)}`],
+    ['on-chain answer', `${D.prop.label} = ${String(D.onchain.verdicts[0].answer).toUpperCase()} (proof built from corrected data)`],
+  ];
+  $('proofobj').innerHTML = rows.map(([k, v]) =>
+    `<div class="q"><span class="qt">${k}</span><span class="qa" style="font-size:12px;font-weight:400;color:var(--mute);text-align:right">${v}</span></div>`
+  ).join('');
+})();
 
 const NAMES = { goal:'Goal', var:'VAR review opened', var_end:'VAR review closed', action_discarded:'Action discarded', game_finalised:'Game finalised' };
 $('tl').innerHTML = D.timeline.map(e => {
@@ -543,7 +564,7 @@ $('foot').innerHTML = `
   <b>Why this page needs no wallet</b>: TxLINE's free tier requires an on-chain subscribe transaction, and the
   hackathon terms say judges shall not be required to establish a blockchain wallet. So this data was fetched once
   with our subscription and frozen here. It is also insurance: /api/scores/historical serves only a two-week window,
-  so this match ages out of the API on ~28 Jul — the day before judging.<br>
+  so this match ages out of the API on ~28 Jul, the day before judging.<br>
   <b>Reproduce</b>: <code>npm run replay</code> · <code>npm run verify</code> · <code>npm run demo</code>`;
 </script>
 </body>

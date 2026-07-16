@@ -88,7 +88,7 @@ const line = (s = '') => console.log(s);
 const rule = () => line('-'.repeat(76));
 
 line('='.repeat(76));
-line('  PHANTOM ESCROW — France v Spain, World Cup semi-final, 2026-07-14');
+line('  PHANTOM ESCROW · France v Spain, World Cup semi-final, 2026-07-14');
 line(`  PROP: "Spain total goals > 2"   (maker = YES, taker = NO, ${STAKE.toNumber() / LAMPORTS_PER_SOL} SOL/side)`);
 line('  TRUTH: Spain scored 2. The prop is FALSE. NO must win.');
 line('='.repeat(76));
@@ -147,14 +147,14 @@ const attempt = async (label: string, val: any, threshold: number, expect: 'REJE
 };
 
 rule();
-line('  ATTACKS — every one uses a genuine, valid, unforged TxLINE proof');
+line('  ATTACKS: every one uses a genuine, valid, unforged TxLINE proof');
 rule();
 
 await attempt('ATTACK 1  half-time proof (Spain had 1 goal at HT) to settle early', halfProof, 2, 'REJECT');
 await attempt('ATTACK 2  honest final proof, but asks "Spain > 1" instead of "> 2"', finalProof, 1, 'REJECT');
 
 rule();
-line('  HONEST SETTLEMENT — final proof, the question the prop actually asked');
+line('  HONEST SETTLEMENT: final proof, the question the prop actually asked');
 rule();
 const settled = await attempt('SETTLE    final proof (period 100), predicate "Spain > 2"', finalProof, 2, 'ACCEPT');
 
@@ -173,7 +173,7 @@ if (!settled || state !== 'settled') {
 const winner = p.yesWon ? 'MAKER (YES)' : 'TAKER (NO)';
 line(`  chain says: "Spain total goals > 2" = ${String(p.yesWon).toUpperCase()}`);
 line(`  winner    : ${winner}`);
-line(`  correct   : ${!p.yesWon ? 'YES — Spain scored 2, the prop was false' : 'NO — something is wrong'}`);
+line(`  correct   : ${!p.yesWon ? 'YES, Spain scored 2, the prop was false' : 'NO, something is wrong'}`);
 line('');
 line('  Nothing above trusted the stream. Every rejection and the settlement itself');
 line('  came from a Merkle proof verified on-chain by TxLINE, via CPI.');
