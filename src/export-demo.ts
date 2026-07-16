@@ -102,6 +102,20 @@ const out = {
     { n: 2, name: 'Finality', blocks: 'an honest half-time proof settling a full-match prop early', error: 'ProofNotFinal' },
     { n: 3, name: 'Predicate binding', blocks: 'the settler swapping the question to one they win', error: 'PredicateMismatch' },
   ],
+  // The proof object. An on-chain data feed can only express "this value was later revised"
+  // if its schema carries (a) an as-of time distinct from publication time, and (b) a
+  // supersession link between records. Verified across nine settlement systems Jul 15-16
+  // (UMA, Chainlink, Pyth, API3, Reality.eth, Augur, Overtime, SX, Azuro): none carry either.
+  // TxLINE carries both. This is the difference the whole submission turns on.
+  schemaDiff: {
+    columns: ['as-of time ≠ publish time', 'supersession link', 'can express a revision'],
+    rows: [
+      { feed: 'Chainlink', asOf: false, link: false, revision: false, note: 'append-only; a correction is identical to a price move' },
+      { feed: 'Pyth', asOf: false, link: false, revision: false, note: 'confidence is dispersion now, not maturity' },
+      { feed: 'UMA / Polymarket', asOf: false, link: false, revision: false, note: '2h liveness guards a liar, not a revision' },
+      { feed: 'TxLINE', asOf: true, link: true, revision: true, note: 'batch min/max + period; Confirmed:false → action_discarded' },
+    ],
+  },
 };
 
 writeFileSync('web/demo-data.json', JSON.stringify(out, null, 2));

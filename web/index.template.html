@@ -73,6 +73,20 @@
   .tag{font-family:var(--mono);font-size:9px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;
        padding:3px 7px;border-radius:var(--r-xs);border:1px solid var(--line-2);color:var(--dim);margin-left:9px}
 
+  /* schema-diff matrix — the centrepiece. mono, hairline, TxLINE row lifted. */
+  .matrix{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-card);overflow-x:auto}
+  .matrix table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;min-width:620px}
+  .matrix th{text-align:left;font-weight:400;color:var(--dim);font-size:11px;letter-spacing:.06em;
+             text-transform:uppercase;padding:16px 18px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .matrix th:first-child{width:34%}
+  .matrix td{padding:15px 18px;border-bottom:1px solid var(--line);color:var(--mute)}
+  .matrix tr:last-child td{border-bottom:0}
+  .matrix .feed{color:var(--ink);font-weight:700}
+  .matrix .note{font-size:11px;color:var(--dim)}
+  .matrix .yes{color:var(--ink);font-weight:700}
+  .matrix .no{color:var(--faint)}
+  .matrix tr.own td{background:var(--surface)}
+  .matrix tr.own .feed{font-size:15px}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:36px;background:var(--line);
        border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
   .card{background:var(--base);padding:32px}
@@ -138,7 +152,7 @@
 
 <header><div class="wrap">
   <div class="eyebrow" id="eyebrow"></div>
-  <h1>The feed said <span class="ghost" id="h-was"></span>.<br>It was never <span id="h-was2"></span>.</h1>
+  <h1>The feed said <span class="ghost" id="h-was"></span>.<br>A proof says they published it — not that it happened.</h1>
   <p class="lede" id="lede"></p>
   <div class="board">
     <div class="teams" id="teams"></div>
@@ -156,8 +170,15 @@
 </div></section>
 
 <section><div class="wrap">
-  <h2>Two engines, one feed</h2>
-  <p class="sub">The brief suggests using the SSE stream to “dynamically trigger prediction resolutions”. Here is what that does, on this match, on this prop: <b id="prop-lbl"></b>.</p>
+  <h2>The gap no other feed can express</h2>
+  <p class="sub">To settle a market that later gets corrected, a data feed's schema needs two things: an <b>as-of time</b> distinct from when it was published, and a <b>link</b> from a record to the one that supersedes it. We checked nine on-chain settlement systems. Every waiting period in all of them guards against a liar, not against the truth changing.</p>
+  <div class="matrix" id="matrix"></div>
+  <p class="sub" style="margin-top:20px">TxLINE ships both — <code style="font-family:var(--mono);font-size:13px">Confirmed:false → action_discarded</code>, with a batch window that is not the publish time. That is the primitive the settlement layer was missing.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Settled by proof, not by stream</h2>
+  <p class="sub">The same prop, two engines. One resolves the moment the live feed reads true; the other only on a Merkle proof verified on-chain. Prop under test: <b id="prop-lbl"></b>.</p>
   <div class="two" id="engines"></div>
 </div></section>
 
@@ -184,14 +205,25 @@ const dash = (s) => s.replace('-', '–');
 $('eyebrow').textContent = `${D.fixture.stage} · ${D.fixture.name} · ${D.fixture.date} · fixture ${D.fixture.id}`;
 $('h-was').textContent = dash(D.phantom.scoreDuring);
 $('h-was2').textContent = dash(D.phantom.scoreDuring);
-$('lede').innerHTML = `For <b>${D.phantom.durationSeconds} seconds</b> TxLINE's live feed asserted a scoreline that never existed. `
-  + `A settlement engine reading the stream in that window released funds on a goal that was erased `
-  + `${D.phantom.durationSeconds} seconds later. On-chain, that cannot be undone.`;
+$('lede').innerHTML = `For <b>${D.phantom.durationSeconds} seconds</b> on 14 July, TxLINE's live feed asserted a scoreline that never existed — `
+  + `then VAR erased it. A Merkle root would have proved TxODDS <b>published</b> ${dash(D.phantom.scoreDuring)}. `
+  + `It would not have proved it was <b>true</b>. Every on-chain oracle we checked can prove publication. `
+  + `TxLINE's schema is the only one that can also say: <b>this was revised</b>.`;
 $('teams').textContent = D.fixture.name.replace(' v ', '  ·  ');
 $('b-was').textContent = dash(D.phantom.scoreDuring);
 $('b-now').textContent = dash(D.phantom.scoreActual);
 $('b-nowlbl').textContent = `final · game_finalised ${D.truth.finalisedAt}`;
 $('prop-lbl').textContent = D.prop.label;
+
+const mark = (b) => b ? '<span class="yes">yes</span>' : '<span class="no">no</span>';
+$('matrix').innerHTML = `<table>
+  <thead><tr><th>settlement feed</th>${D.schemaDiff.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+  <tbody>${D.schemaDiff.rows.map(r => `
+    <tr class="${r.feed === 'TxLINE' ? 'own' : ''}">
+      <td><span class="feed">${r.feed}</span><br><span class="note">${r.note}</span></td>
+      <td>${mark(r.asOf)}</td><td>${mark(r.link)}</td><td>${mark(r.revision)}</td>
+    </tr>`).join('')}</tbody>
+</table>`;
 
 const NAMES = { goal:'Goal', var:'VAR review opened', var_end:'VAR review closed', action_discarded:'Action discarded', game_finalised:'Game finalised' };
 $('tl').innerHTML = D.timeline.map(e => {
