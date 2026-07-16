@@ -1,5 +1,5 @@
 {
-  "name": "phantom",
+  "name": "overturn",
   "version": "1.0.0",
   "description": "A prop-bet escrow that cannot pay out on a goal that did not happen. TxODDS x Solana World Cup Hackathon.",
   "main": "index.js",

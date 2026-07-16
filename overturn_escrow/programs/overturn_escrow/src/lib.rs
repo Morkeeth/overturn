@@ -1,4 +1,4 @@
-//! # phantom_escrow
+//! # overturn_escrow
 //!
 //! A parametric prop-bet escrow that **cannot pay out on a goal that didn't happen.**
 //!
@@ -209,7 +209,7 @@ pub enum PhantomError {
 // ---------------------------------------------------------------------------
 
 #[program]
-pub mod phantom_escrow {
+pub mod overturn_escrow {
     use super::*;
 
     /// Maker opens a prop and funds one side. The predicate is frozen here, on-chain, before

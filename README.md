@@ -1,4 +1,4 @@
-# PHANTOM
+# Overturn
 
 **A prop-bet escrow that cannot pay out on a goal that didn't happen.**
 
@@ -41,7 +41,7 @@ mainnet says: TRUE   <-  Spain goals > 1   (control: they really did score 2)
 So the danger was never the cryptography. It is everything around it:
 
 **1 · The keeper.** Most escrows will have a backend listening to SSE that calls `settle()`. That
-keeper is the vulnerability. `phantom_escrow` has **no keeper and no admin key**. The only path to
+keeper is the vulnerability. `overturn_escrow` has **no keeper and no admin key**. The only path to
 moving money is a Merkle proof verified on-chain by CPI into `validate_stat_v2`.
 
 **2 · The question.** A valid proof answers *whatever question you ask it*. Our prop is
@@ -114,7 +114,7 @@ of the API around 28 July, the day before judging.
 | `GET /api/scores/stat-validation` | Merkle proofs (`fixtureId`, `seq`, `statKeys`) |
 | `GET /api/odds/snapshot/{fixtureId}?asOf=` | historical demargined odds (used to measure the market blackout) |
 | `GET /api/fixtures/snapshot?startEpochDay=` | fixture discovery |
-| on-chain `txoracle::validate_stat_v2` | CPI'd by `phantom_escrow::settle` |
+| on-chain `txoracle::validate_stat_v2` | CPI'd by `overturn_escrow::settle` |
 | on-chain `txoracle::subscribe` | service level 12, 4 weeks, free tier |
 
 ## Notes for TxODDS (things we found the hard way)
@@ -142,7 +142,7 @@ Offered as genuine feedback, not complaint. The data layer is good; the docs are
 ```
 TxLINE SSE stream ──> gate.ts (state machine) ──> UI only. Never money.
                                                    PENDING -> PROVISIONAL -> RETRACTED
-TxLINE Merkle proof ──> phantom_escrow::settle ──CPI──> txoracle::validate_stat_v2 -> bool
+TxLINE Merkle proof ──> overturn_escrow::settle ──CPI──> txoracle::validate_stat_v2 -> bool
                               │                                                        │
                               └── guards 1/2/3 ───────────────────────────────────────┘
                                      │
@@ -151,7 +151,7 @@ TxLINE Merkle proof ──> phantom_escrow::settle ──CPI──> txoracle::va
 
 | File | Role |
 |---|---|
-| `programs/phantom_escrow/src/lib.rs` | the escrow + the three guards + the CPI |
+| `programs/overturn_escrow/src/lib.rs` | the escrow + the three guards + the CPI |
 | `src/gate.ts` | the settlement state machine (stream drives UI, proof drives money) |
 | `src/feed.ts` | TxLINE score-feed types + SSE parsing |
 | `src/replay.ts` | naive vs guarded, on the real semi-final |

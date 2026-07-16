@@ -74,7 +74,7 @@ const conn = new Connection(RPC, 'confirmed');
 const provider = new anchor.AnchorProvider(conn, new anchor.Wallet(maker), { commitment: 'confirmed' });
 anchor.setProvider(provider);
 
-const idl = JSON.parse(fs.readFileSync('./phantom_escrow/target/idl/phantom_escrow.json', 'utf8'));
+const idl = JSON.parse(fs.readFileSync('./overturn_escrow/target/idl/overturn_escrow.json', 'utf8'));
 const program = new anchor.Program(idl, provider);
 
 const nonce = new BN(Date.now());
@@ -88,7 +88,7 @@ const line = (s = '') => console.log(s);
 const rule = () => line('-'.repeat(76));
 
 line('='.repeat(76));
-line('  PHANTOM ESCROW · France v Spain, World Cup semi-final, 2026-07-14');
+line('  OVERTURN ESCROW · France v Spain, World Cup semi-final, 2026-07-14');
 line(`  PROP: "Spain total goals > 2"   (maker = YES, taker = NO, ${STAKE.toNumber() / LAMPORTS_PER_SOL} SOL/side)`);
 line('  TRUTH: Spain scored 2. The prop is FALSE. NO must win.');
 line('='.repeat(76));

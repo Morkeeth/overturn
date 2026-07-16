@@ -1,5 +1,5 @@
 [package]
-name = "phantom_escrow"
+name = "overturn_escrow"
 version = "0.1.0"
 description = "Created with Anchor"
 edition.workspace = true
@@ -7,7 +7,7 @@ rust-version.workspace = true
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "phantom_escrow"
+name = "overturn_escrow"
 
 [features]
 default = []
