@@ -81,16 +81,38 @@
     .row .val{text-align:left}
     nav .wrap{height:auto;padding-top:12px;padding-bottom:12px;flex-direction:column;align-items:flex-start}
   }
+  .mark{text-decoration:none}
+  .pill.here{color:var(--ink);border-color:var(--ink)}
+
+  /* The sandbox. A button is the only place this design uses a solid fill, because it is the
+     only place something happens. Results are stated, never coloured green or red. */
+  .try{margin-top:24px;background:var(--surface);border:1px solid var(--line);
+       border-radius:var(--r-card);padding:26px}
+  .try .who{font-family:var(--mono);font-size:11px;color:var(--dim);word-break:break-all}
+  .btn{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+       border:1px solid var(--ink);background:var(--ink);color:var(--base);font-weight:700;
+       border-radius:var(--r-pill);padding:11px 18px;cursor:pointer}
+  .btn:hover{opacity:.85}
+  .btn.ghost{background:transparent;color:var(--mute);border-color:var(--line-2)}
+  .btn.ghost:hover{color:var(--ink);border-color:var(--ink)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .out{margin-top:18px;background:#060606;border:1px solid var(--line);border-radius:var(--r-sm);
+       padding:16px 18px;font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--mute);
+       white-space:pre-wrap;word-break:break-word;display:none}
+  .out.on{display:block}
+  .out b{color:var(--ink)}
+  .out s{color:var(--faint)}
 </style>
 </head>
 <body>
 
 <nav><div class="wrap">
-  <div class="mark">Over<s>turn</s></div>
+  <a class="mark" href="/">Over<s>turn</s></a>
   <div class="navlinks">
-    <a class="pill" href="/">Home</a>
+    <a class="pill here" href="/market">Market</a>
     <a class="pill" href="/about">About</a>
-    <a class="pill" href="/story">The story</a>
+    <a class="pill" href="/story">Story</a>
     <a class="pill" href="https://github.com/Morkeeth/overturn">Repo</a>
     <span class="pill" id="asof">reading chain…</span>
   </div>
@@ -112,6 +134,18 @@
   side must win. The chain decided that, not us.</p>
   <div class="grid" id="clusters"></div>
   <div id="rpcnote"></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Try to break it yourself</h2>
+  <p class="sub">There is a live prop on devnet with <b>0.1 SOL locked in it</b>. Settling is
+  permissionless, so you are allowed to try to settle it, and so is everyone else. Below is a real,
+  valid, unforged TxLINE proof from the <b>other</b> semi-final. It clears the finality guard and the
+  predicate guard. Sign it with your own wallet and watch the escrow refuse it.</p>
+  <p class="sub">We supply the proof, because that needs our TxLINE subscription. You supply the
+  signature, because that needs your wallet. We never see your key and cannot move your money. It costs
+  a devnet transaction fee, which is nothing, and it will fail, which is the point.</p>
+  <div class="try" id="try"></div>
 </div></section>
 
 <section><div class="wrap">
@@ -355,7 +389,144 @@ async function loadFeed() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// The sandbox. Your wallet, your signature, our proof.
+//
+// No wallet-adapter, no bundler: Phantom and friends inject a provider, and that is enough
+// to ask for a signature. The transaction itself is built by /api/tx, because assembling a
+// settle needs the TxLINE proof and that needs our subscription token.
+// ---------------------------------------------------------------------------
+const SANDBOX_PROP = 'Hx1JiroRenfuTtfNtQZpkP9DbCMzW1XFehdmsogPr85y';
+let wallet = null;
+
+const provider = () =>
+  window.phantom?.solana?.isPhantom ? window.phantom.solana
+  : window.solana?.isPhantom ? window.solana
+  : window.solflare?.isSolflare ? window.solflare
+  : null;
+
+const out = (html) => {
+  const el = document.getElementById('tryout');
+  el.classList.add('on');
+  el.innerHTML = html;
+};
+
+async function connect() {
+  const p = provider();
+  if (!p) {
+    out(`No Solana wallet found in this browser.\n\nThis needs an injected wallet such as <b>Phantom</b> or <b>Solflare</b>, set to <b>devnet</b>.\nEverything else on this page works without one: it is all reads.`);
+    return;
+  }
+  try {
+    const r = await p.connect();
+    wallet = r.publicKey?.toString?.() ?? p.publicKey?.toString?.();
+    renderTry();
+    out(`Connected as <b>${wallet}</b>\n\nMake sure your wallet is on <b>devnet</b>. You need a few lamports for the fee; nothing else is at stake for you.`);
+  } catch (e) {
+    out(`Wallet refused the connection: ${String(e.message || e)}`);
+  }
+}
+
+async function send(action) {
+  const p = provider();
+  if (!p || !wallet) return connect();
+
+  const label = action === 'attack' ? 'the OTHER semi-final\'s proof' : 'the real full-time proof';
+  out(`Asking /api/tx for ${label}…\nWe assemble it. You sign it. Your key never leaves your wallet.`);
+
+  try {
+    const r = await fetch(`/api/tx?action=${action}&prop=${SANDBOX_PROP}&signer=${wallet}`);
+    const j = await r.json();
+    if (j.error) return out(`Could not build the transaction: ${j.error}`);
+
+    out(`${j.note}\n\nSign it in your wallet…`);
+
+    // Deserialise, sign and send with the user's own wallet.
+    const raw = Uint8Array.from(atob(j.tx), (c) => c.charCodeAt(0));
+    const { signature } = await p.signAndSendTransaction(
+      window.solanaWeb3Tx ? window.solanaWeb3Tx(raw) : await legacyTx(raw),
+    );
+
+    out(`Sent <b>${signature}</b>\nWaiting for the cluster…`);
+    const res = await confirm(signature);
+    if (res.err) {
+      const reason = readError(res);
+      out(`<b>REJECTED.</b> ${reason}\n\nThe money did not move. Nothing was verified either: all three guards run before the oracle is ever asked, so the escrow refused a proof it had no business verifying.\n\n<a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" style="color:var(--ink)">See it on the explorer</a>`);
+    } else {
+      out(`<b>ACCEPTED.</b> The escrow took it.\n\n<a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" style="color:var(--ink)">See it on the explorer</a>`);
+      setTimeout(load, 1500);
+    }
+  } catch (e) {
+    const m = String(e.message || e);
+    out(m.includes('User rejected') ? 'You rejected it in the wallet. Nothing happened.' : `Failed: ${m}`);
+  }
+}
+
+/** Phantom accepts a Transaction object; we have wire bytes. Rebuild it without a bundler. */
+async function legacyTx(raw) {
+  if (!window.__web3) {
+    await new Promise((ok, no) => {
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/@solana/web3.js@1.98.4/lib/index.iife.min.js';
+      s.onload = ok; s.onerror = no; document.head.appendChild(s);
+    });
+    window.__web3 = window.solanaWeb3;
+  }
+  return window.__web3.Transaction.from(raw);
+}
+
+async function confirm(sig) {
+  for (let i = 0; i < 30; i++) {
+    try {
+      const r = await rpc(CLUSTERS[1].rpcs, 'getSignatureStatuses', [[sig], { searchTransactionHistory: true }]);
+      const st = r?.value?.[0];
+      if (st && (st.confirmationStatus === 'confirmed' || st.confirmationStatus === 'finalized')) return st;
+    } catch { /* keep waiting */ }
+    await new Promise((r) => setTimeout(r, 1200));
+  }
+  return { err: null, timeout: true };
+}
+
+/**
+ * The reason lives in the program's custom error code. These strings are the msg fields
+ * from the shipped IDL, verbatim, so what you read here is what the program actually said
+ * rather than a second copy of the truth that can drift away from it.
+ */
+const ERRORS = {
+  6000: 'prop is not open for taking',
+  6001: 'prop is not matched',
+  6002: 'maker cannot take their own prop',
+  6003: 'too early: the match is not over yet',
+  6004: 'GUARD 1: proof is for a different fixture',
+  6005: 'GUARD 2: proof batch does not cover the end of the match',
+  6006: 'GUARD 3: submitted strategy does not match the predicate this prop was created with',
+  6007: 'proof is for a different stat than this prop',
+  6008: 'oracle account does not match the one this prop was bound to',
+  6009: 'oracle returned no data',
+  6010: 'prop is not settled',
+  6011: 'caller is not the winner',
+};
+function readError(status) {
+  const code = status?.err?.InstructionError?.[1]?.Custom;
+  return ERRORS[code] ?? (code != null ? `the program returned error ${code}` : 'the transaction failed');
+}
+
+function renderTry() {
+  document.getElementById('try').innerHTML = `
+    <div class="who">${wallet ? 'connected · ' + wallet : 'no wallet connected · everything else on this page is a read and needs none'}</div>
+    <div class="btns">
+      ${wallet
+        ? `<button class="btn" onclick="send('attack')">Attack it with the wrong match</button>
+           <button class="btn ghost" onclick="send('settle')">Settle it honestly</button>`
+        : `<button class="btn" onclick="connect()">Connect a wallet</button>`}
+    </div>
+    <div class="out" id="tryout"></div>`;
+}
+window.connect = connect;
+window.send = send;
+
 async function load() {
+  renderTry();
   document.getElementById('receipts').innerHTML = RECEIPTS.map(([what, sig]) =>
     `<a href="https://explorer.solana.com/tx/${sig}"><span class="what">${what}</span><span class="sig">${short(sig)}</span></a>`).join('');
 

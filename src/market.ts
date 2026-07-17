@@ -95,7 +95,7 @@ export function connect(wallet = maker()) {
   const conn = new Connection(RPC, 'confirmed');
   const provider = new anchor.AnchorProvider(conn, new anchor.Wallet(wallet), { commitment: 'confirmed' });
   anchor.setProvider(provider);
-  const idl = JSON.parse(fs.readFileSync('./overturn_escrow/target/idl/overturn_escrow.json', 'utf8'));
+  const idl = JSON.parse(fs.readFileSync('./idl/overturn_escrow.json', 'utf8'));
   return { conn, provider, program: new anchor.Program(idl, provider) };
 }
 
