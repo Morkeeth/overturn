@@ -131,7 +131,8 @@
   <h2>The prop, on both chains</h2>
   <p class="sub">One question: <b>Spain total goals &gt; 2</b> on fixture 18237038, France v Spain,
   the World Cup semi-final of 14 July 2026. Spain scored 2, so the honest answer is FALSE and the NO
-  side must win. The chain decided that, not us.</p>
+  side must win. On <b>mainnet</b> this is already settled, with real SOL, decided by a Merkle proof.
+  The <b>devnet</b> one is still live and matched: you can try to settle it wrongly yourself, just below.</p>
   <div class="grid" id="clusters"></div>
   <div id="rpcnote"></div>
 </div></section>
@@ -218,9 +219,11 @@ const CLUSTERS = [
   { key: 'mainnet', name: 'mainnet-beta',
     rpcs: ['https://solana-rpc.publicnode.com', 'https://api.mainnet-beta.solana.com'],
     prop: '9bifQAHTDMR5o5nLkdVoCXh3pmKApxkfBbu2QaeB94r9', q: '' },
+  // The devnet card shows the SAME prop the "try to break it" section lets you attack, so the
+  // page is coherent: this is a live, matched prop, and below you can try to settle it wrongly.
   { key: 'devnet', name: 'devnet',
     rpcs: ['https://api.devnet.solana.com', 'https://devnet.helius-rpc.com/?api-key=public'],
-    prop: '38LzLkoyk6xMaFEFJ1jKyWNCLoe6qcUNrtvsQW3j4bUc', q: '?cluster=devnet' },
+    prop: 'Hx1JiroRenfuTtfNtQZpkP9DbCMzW1XFehdmsogPr85y', q: '?cluster=devnet' },
 ];
 
 const RECEIPTS = [
