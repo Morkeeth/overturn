@@ -183,7 +183,7 @@ program. The check above proves it is *this* program. That distinction is the wh
 
 | Endpoint | Use |
 |---|---|
-| `POST /auth/guest/start` | guest JWT (30-day expiry, pins client IP) |
+| `POST /auth/guest/start` | guest JWT (30-day expiry; carries a `maybeClientIp` claim, but it is not enforced: a JWT minted from one IP fetches proofs fine from another, and the recorded IP is a CDN edge, not the caller) |
 | `POST /api/token/activate` | API token after the on-chain subscribe (returns `text/plain`, not JSON) |
 | `GET /api/scores/historical/{fixtureId}` | the 1,027-event replay of the semi-final |
 | `GET /api/scores/stream` | live SSE watcher |
