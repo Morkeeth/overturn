@@ -23,3 +23,4 @@ overturn_escrow/.anchor/
 
 # local scratch: which prop the step commands are pointed at
 .overturn-market.json
+.vercel

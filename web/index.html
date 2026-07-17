@@ -3,162 +3,83 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Overturn: the feed said 0-3. It was never 0-3.</title>
+<title>Overturn: an escrow that cannot pay out on a goal that didn't happen</title>
+<meta name="description" content="A prop-bet escrow on Solana that refuses to settle on a retracted result. Live on mainnet, settled by TxLINE Merkle proofs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  /* Monochrome. No status colours, no accent.
-     The only signal is weight, strike and opacity: the phantom is struck and faded,
-     the truth is white and large. If a distinction needs a colour to be legible,
-     it wasn't designed. Structure follows sorare.com's near-black + heavy uppercase
-     grotesk + card radii; the palette does not. */
+  /* Monochrome. No status colours, no accent. The only signal is weight, strike and
+     opacity: the phantom is struck and faded, the truth is white and large. If a
+     distinction needs a colour to be legible, it wasn't designed. */
   :root{
     --base:#0A0A0A; --surface:#131313; --raise:#1C1C1C;
     --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
     --ink:#FFFFFF; --mute:#8C8C8C; --dim:#4E4E4E; --faint:#2E2E2E;
-    --r-pill:40px; --r-card:16px; --r-sm:6px; --r-xs:3px;
+    --r-pill:40px; --r-card:16px; --r-sm:6px;
     --display:'Archivo',system-ui,sans-serif;
     --mono:'JetBrains Mono',ui-monospace,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{background:var(--base);color:var(--ink);font-family:var(--display);font-weight:400;
+  body{background:var(--base);color:var(--ink);font-family:var(--display);
        -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit}
   .wrap{max-width:1100px;margin:0 auto;padding:0 28px}
+  nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(10,10,10,.88);
+      backdrop-filter:blur(8px);z-index:5}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+  .mark{font-weight:900;font-size:17px;letter-spacing:-.02em;text-transform:uppercase}
+  .mark s{text-decoration-thickness:2px}
+  .navlinks{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+        border:1px solid var(--line-2);border-radius:var(--r-pill);padding:7px 13px;color:var(--mute);
+        text-decoration:none;white-space:nowrap}
+  .pill:hover{color:var(--ink);border-color:var(--ink)}
+  .pill.solid{background:var(--ink);color:var(--base);border-color:var(--ink);font-weight:700}
 
-  nav{position:sticky;top:0;z-index:50;background:rgba(10,10,10,.88);backdrop-filter:blur(14px);
-      border-bottom:1px solid var(--line)}
-  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
-  .mark{font-weight:900;letter-spacing:-.03em;font-size:18px;text-transform:uppercase}
-  .mark s{text-decoration:none;position:relative}
-  .mark s:after{content:"";position:absolute;left:0;right:0;top:52%;height:2px;background:var(--ink)}
-  .chip{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-        padding:7px 12px;border-radius:var(--r-pill);border:1px solid var(--line-2);color:var(--mute)}
-
-  header{padding:88px 0 64px;border-bottom:1px solid var(--line)}
-  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:26px}
-  h1{font-size:clamp(42px,8vw,98px);font-weight:900;line-height:.9;letter-spacing:-.04em;text-transform:uppercase}
+  header{padding:86px 0 72px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+           color:var(--dim);margin-bottom:26px}
+  h1{font-size:clamp(38px,6.4vw,76px);font-weight:900;letter-spacing:-.035em;line-height:.98}
   h1 .ghost{color:var(--dim);position:relative;white-space:nowrap}
-  h1 .ghost:after{content:"";position:absolute;left:-1%;right:-1%;top:52%;height:6px;background:var(--dim);border-radius:1px}
-  .lede{margin-top:28px;max-width:62ch;font-size:17px;line-height:1.65;color:var(--mute)}
-  .lede b{color:var(--ink);font-weight:700}
+  h1 .ghost:after{content:"";position:absolute;left:-1%;right:-1%;top:52%;height:6px;
+                  background:var(--dim);border-radius:1px}
+  .lede{margin-top:26px;color:var(--mute);font-size:17px;line-height:1.65;max-width:64ch}
+  .cta{display:flex;gap:10px;margin-top:36px;flex-wrap:wrap}
 
-  .board{margin-top:48px;border:1px solid var(--line);border-radius:var(--r-card);
-         padding:40px 32px;display:flex;flex-direction:column;align-items:center;gap:2px}
-  .board .teams{font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:18px}
-  .board .was{font-family:var(--mono);font-weight:700;font-size:clamp(24px,3.4vw,34px);color:var(--faint);
-              position:relative;display:inline-block}
-  .board .was:after{content:"";position:absolute;left:-10%;right:-10%;top:50%;height:3px;background:var(--faint)}
-  .board .waslbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-top:6px}
-  .board .now{font-family:var(--mono);font-weight:700;font-size:clamp(56px,10vw,96px);letter-spacing:-.04em;margin-top:22px;line-height:1}
-  .board .nowlbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:10px}
+  section{padding:56px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(20px,2.4vw,26px);font-weight:900;letter-spacing:-.015em;text-transform:uppercase}
+  .sub{margin-top:14px;color:var(--mute);font-size:15px;line-height:1.65;max-width:70ch}
 
-  section{padding:76px 0;border-bottom:1px solid var(--line)}
-  h2{font-size:clamp(24px,3.6vw,40px);font-weight:900;text-transform:uppercase;letter-spacing:-.035em;line-height:1}
-  .sub{margin-top:16px;color:var(--mute);font-size:16px;line-height:1.65;max-width:68ch}
-  .sub b{color:var(--ink);font-weight:700}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:30px}
+  .g{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:26px}
+  .g .n{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .g h3{margin-top:12px;font-size:17px;font-weight:900;letter-spacing:-.01em}
+  .g p{margin-top:9px;color:var(--mute);font-size:13px;line-height:1.6}
+  .g code{display:inline-block;margin-top:13px;font-family:var(--mono);font-size:11px;color:var(--dim)}
 
-  .tl{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
-  .tl .r{display:grid;grid-template-columns:92px 1fr auto;gap:18px;align-items:center;
-         padding:14px 20px;border-bottom:1px solid var(--line)}
-  .tl .r:last-child{border-bottom:0}
-  .tl .r.ph{background:var(--surface)}
-  .tl .r.ph .a,.tl .r.ph .s{color:var(--ink)}
-  .tl .r.dim .a,.tl .r.dim .s{color:var(--dim)}
-  .tl .t{font-family:var(--mono);font-size:12px;color:var(--dim)}
-  .tl .a{font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:.04em;color:var(--mute)}
-  .tl .s{font-family:var(--mono);font-weight:700;font-size:15px;color:var(--mute)}
-  .tl .r.ph .s{position:relative}
-  .tag{font-family:var(--mono);font-size:9px;font-weight:400;letter-spacing:.12em;text-transform:uppercase;
-       padding:3px 7px;border-radius:var(--r-xs);border:1px solid var(--line-2);color:var(--dim);margin-left:9px}
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+         border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden;margin-top:30px}
+  .f{background:var(--base);padding:26px}
+  .f .v{font-family:var(--mono);font-weight:700;font-size:clamp(24px,3.2vw,34px);letter-spacing:-.03em}
+  .f .l{margin-top:8px;color:var(--dim);font-family:var(--mono);font-size:10px;
+        letter-spacing:.14em;text-transform:uppercase}
+  .f .d{margin-top:10px;color:var(--mute);font-size:13px;line-height:1.55}
 
-  /* schema-diff matrix: the centrepiece. mono, hairline, TxLINE row lifted. */
-  .matrix{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-card);overflow-x:auto}
-  .matrix table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;min-width:620px}
-  .matrix th{text-align:left;font-weight:400;color:var(--dim);font-size:11px;letter-spacing:.06em;
-             text-transform:uppercase;padding:16px 18px;border-bottom:1px solid var(--line);white-space:nowrap}
-  .matrix th:first-child{width:34%}
-  .matrix td{padding:15px 18px;border-bottom:1px solid var(--line);color:var(--mute)}
-  .matrix tr:last-child td{border-bottom:0}
-  .matrix .feed{color:var(--ink);font-weight:700}
-  .matrix .note{font-size:11px;color:var(--dim)}
-  .matrix .yes{color:var(--ink);font-weight:700}
-  .matrix .no{color:var(--faint)}
-  .matrix tr.own td{background:var(--surface)}
-  .matrix tr.own .feed{font-size:15px}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:36px;background:var(--line);
-       border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
-  /* The position. A slip, not a KPI card: the money is stated once, the losing
-     side is faded rather than coloured, per the palette note above. */
-  .slip{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
-  .slip-h{display:flex;justify-content:space-between;align-items:flex-start;gap:28px;padding:30px 32px;border-bottom:1px solid var(--line)}
-  .slip-q{font-weight:900;font-size:clamp(22px,3vw,31px);letter-spacing:-.02em;margin-top:9px;line-height:1.1}
-  .slip-m{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:10px}
-  .slip-amt{font-family:var(--mono);font-weight:700;font-size:clamp(30px,4.4vw,44px);letter-spacing:-.03em;margin-top:7px;white-space:nowrap;line-height:1}
-  .slip-amt i{font-style:normal;font-size:13px;color:var(--dim);margin-left:5px}
-  .sides{display:grid;grid-template-columns:1fr 1fr}
-  .side{padding:24px 32px;display:flex;align-items:baseline;gap:14px}
-  .side+.side{border-left:1px solid var(--line)}
-  .side .sd{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.16em}
-  .side .sv{font-family:var(--mono);font-weight:700;font-size:19px}
-  .side .sw{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
-  .side.lost{color:var(--faint)}
-  .side.lost .sw{color:var(--faint)}
-  .slip-f{display:flex;justify-content:space-between;align-items:baseline;gap:18px;padding:20px 32px;border-top:1px solid var(--line);
-          font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
-  .slip-f b{color:var(--ink);font-weight:700}
-  .card{background:var(--base);padding:32px}
-  .card.bad{background:var(--surface)}
-  .card .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
-  .card .v{font-size:clamp(30px,4.4vw,46px);font-weight:900;text-transform:uppercase;letter-spacing:-.03em;margin-top:12px;line-height:1}
-  .card.good .v{color:var(--ink)}
-  .card.bad .v{color:var(--ink)}
-  .card.bad .v s{text-decoration:none;position:relative}
-  .card.bad .v s:after{content:"";position:absolute;left:-2%;right:-2%;top:53%;height:5px;background:var(--ink)}
-  .card p{margin-top:14px;color:var(--mute);font-size:14px;line-height:1.6}
-  .card .when{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:16px}
-
-  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:36px;background:var(--line);
-         border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
-  .g{background:var(--base);padding:28px}
-  .g .n{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.12em}
-  .g h3{margin-top:14px;font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:-.01em}
-  .g p{margin-top:10px;color:var(--mute);font-size:14px;line-height:1.6}
-  .g code{display:inline-block;margin-top:16px;font-family:var(--mono);font-size:10px;color:var(--dim);
-          border:1px solid var(--line-2);padding:5px 9px;border-radius:var(--r-xs)}
-
-  .chain{margin-top:36px;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
-  .chain .q{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:22px 24px;
-            border-bottom:1px solid var(--line)}
-  .chain .q:last-child{border-bottom:0}
-  .chain .qt{font-family:var(--mono);font-size:13px;color:var(--mute)}
-  .chain .qa{font-family:var(--mono);font-weight:700;font-size:18px;letter-spacing:.06em}
-  .chain .qa.f{color:var(--ink)}
-  .chain .qa.t{color:var(--dim)}
-  .meta{margin-top:24px;display:flex;flex-wrap:wrap;gap:8px}
-  .meta span{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px solid var(--line);
-             padding:6px 11px;border-radius:var(--r-pill)}
-
-  footer{padding:60px 0 90px;color:var(--dim);font-size:13px;line-height:1.85}
-  footer b{color:var(--mute);font-weight:700}
-  footer code{font-family:var(--mono);font-size:11px;color:var(--mute)}
-
+  .term{margin-top:30px;background:#060606;border:1px solid var(--line);border-radius:var(--r-card);
+        overflow:hidden}
+  .term-h{display:flex;gap:14px;align-items:center;padding:13px 20px;border-bottom:1px solid var(--line);
+          font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .term pre{padding:22px 20px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;
+            color:var(--mute)}
+  .term pre b{color:var(--ink);font-weight:700}
+  .term pre i{color:var(--faint);font-style:normal}
+  footer{padding:56px 0 72px;border-top:1px solid var(--line);color:var(--dim);
+         font-family:var(--mono);font-size:11px;line-height:1.9}
+  footer a{color:var(--mute)}
   @media(max-width:820px){
-    .wrap{padding:0 18px}
-    .two,.three,.sides{grid-template-columns:1fr}
-    .slip-h{flex-direction:column;gap:20px}
-    .side+.side{border-left:0;border-top:1px solid var(--line)}
-    .slip-f{flex-direction:column;gap:8px}
-    /* Stack: time on its own line, then the event, then the score. The tags must wrap
-       rather than push the row past the viewport. */
-    .tl .r{grid-template-columns:1fr;row-gap:7px;padding:16px 16px}
-    .tl .a{display:flex;flex-wrap:wrap;align-items:center;gap:6px;line-height:1.35}
-    .tag{margin-left:0}
-    .tl .s{justify-self:start;font-size:17px}
-    .board{padding:30px 20px}
-    header{padding:56px 0 48px}
-    section{padding:56px 0}
+    .three,.facts{grid-template-columns:1fr}
+    nav .wrap{height:auto;padding-top:12px;padding-bottom:12px;flex-direction:column;align-items:flex-start}
   }
 </style>
 </head>
@@ -166,474 +87,118 @@
 
 <nav><div class="wrap">
   <div class="mark">Over<s>turn</s></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <a class="chip" href="./dashboard.html" style="text-decoration:none">Live on chain</a>
-    <div class="chip">Solana · mainnet + devnet</div>
-    <div class="chip">No wallet required</div>
+  <div class="navlinks">
+    <a class="pill" href="/story">The 26 seconds</a>
+    <a class="pill" href="https://github.com/Morkeeth/overturn">Repo</a>
+    <a class="pill solid" href="/market">See it live</a>
   </div>
 </div></nav>
 
 <header><div class="wrap">
-  <div class="eyebrow" id="eyebrow"></div>
-  <!-- DRAFT: hero voice, Oscar to finalize. Non-overclaim framing: a proof shows publication, not truth. -->
-  <h1>The feed said <span class="ghost" id="h-was"></span>.<br>A proof shows they published it, not that it happened.</h1>
-  <p class="lede" id="lede"></p>
-  <div class="board">
-    <div class="teams" id="teams"></div>
-    <div class="was" id="b-was"></div>
-    <div class="waslbl">what the feed asserted for 26 seconds</div>
-    <div class="now" id="b-now"></div>
-    <div class="nowlbl" id="b-nowlbl"></div>
+  <div class="eyebrow">TxODDS x Solana World Cup · Prediction Markets &amp; Settlement</div>
+  <h1>An escrow that cannot pay out on a goal that <span class="ghost">didn't happen</span>.</h1>
+  <p class="lede">On 14 July, for 26 seconds, the live feed said Spain had scored a third goal against
+  France. VAR erased it. Any market that settled in those 26 seconds paid the wrong side, and the chain
+  does not give money back. Overturn is a prop-bet escrow that refuses to settle on a result that is
+  still provisional, still under review, or has since been withdrawn.</p>
+  <div class="cta">
+    <a class="pill solid" href="/market">See the live market</a>
+    <a class="pill" href="/story">Read what happened</a>
   </div>
 </div></header>
 
 <section><div class="wrap">
-  <h2>The position</h2>
-  <p class="sub">Two people disagree about one number and lock the stake in an escrow. Nobody can pay it out by hand: the only way it opens is a Merkle proof the chain accepts. Everything below this is what happened to this money.</p>
-  <div id="ticket" style="margin-top:26px"></div>
-</div></section>
-
-<section><div class="wrap">
-  <h2>The 26 seconds</h2>
-  <p class="sub">Straight from TxLINE's score feed. A goal is published unconfirmed, the scoreline moves, VAR reviews it, and it is withdrawn. The score goes up and then comes back down. Rows in <b>white</b> are the phantom standing.</p>
-  <div class="tl" id="tl"></div>
-</div></section>
-
-<section><div class="wrap">
-  <h2>The gap no other feed can express</h2>
-  <p class="sub">To settle a market that later gets corrected, a data feed's schema needs two things: an <b>as-of time</b> distinct from when it was published, and a <b>link</b> from a record to the one that supersedes it. We checked nine on-chain settlement systems. Every waiting period in all of them guards against a liar, not against the truth changing.</p>
-  <div class="matrix" id="matrix"></div>
-  <p class="sub" style="margin-top:20px">TxLINE ships both: <code style="font-family:var(--mono);font-size:13px">Confirmed:false → action_discarded</code>, with a batch window that is not the publish time. That is the primitive the settlement layer was missing.</p>
-  <p class="sub" style="margin-top:28px"><b>Instantiated, not asserted.</b> The two records from this match that carry the revision, by sequence number, so you can grep them in the frozen capture. Every value below is reproducible with <code style="font-family:var(--mono);font-size:13px">npm run replay</code>.</p>
-  <div class="chain" id="proofobj" style="margin-top:16px"></div>
-</div></section>
-
-<section><div class="wrap">
-  <h2>Settled by proof, not by stream</h2>
-  <p class="sub">The same prop, two engines. One resolves the moment the live feed reads true; the other only on a Merkle proof verified on-chain. Prop under test: <b id="prop-lbl"></b>.</p>
-  <div class="two" id="engines"></div>
-</div></section>
-
-<section><div class="wrap">
-  <h2>Verifying the proof is not enough</h2>
-  <p class="sub">A Merkle proof is honest, but it answers whatever question you ask, about whatever batch you hand it. Every attack below uses a genuine, valid, unforged TxLINE proof. They are defeated by binding, not by cryptography.</p>
-  <div class="three" id="guards"></div>
-</div></section>
-
-<section><div class="wrap">
-  <h2>The chain disagrees with the stream</h2>
-  <p class="sub">Asked of TxLINE's own oracle by cross-program invocation, against the real anchored Merkle roots for this match.</p>
-  <div class="chain" id="chain"></div>
-  <div class="meta" id="meta"></div>
-</div></section>
-
-<footer><div class="wrap" id="foot"></div></footer>
-
-<script>
-const D = {
-  "generatedFrom": "TxLINE /api/scores/historical/18237038 (captured live 2026-07-15)",
-  "fixture": {
-    "id": 18237038,
-    "name": "France v Spain",
-    "stage": "World Cup semi-final",
-    "date": "2026-07-14"
-  },
-  "prop": {
-    "label": "Spain total goals > 2",
-    "market": "over 2.5 Spain goals",
-    "statKey": 2,
-    "period": 100,
-    "threshold": 2
-  },
-  "eventCount": 1027,
-  "timeline": [
-    {
-      "ts": 1784058256078,
-      "time": "19:44:16",
-      "action": "action_discarded",
-      "confirmed": null,
-      "seq": 405,
-      "scoreCarried": false,
-      "spain": 1,
-      "france": 0,
-      "propTrue": false
-    },
-    {
-      "ts": 1784058685343,
-      "time": "19:51:25",
-      "action": "action_discarded",
-      "confirmed": null,
-      "seq": 474,
-      "scoreCarried": false,
-      "spain": 1,
-      "france": 0,
-      "propTrue": false
-    },
-    {
-      "ts": 1784060376027,
-      "time": "20:19:36",
-      "action": "goal",
-      "confirmed": false,
-      "seq": 617,
-      "scoreCarried": false,
-      "spain": 2,
-      "france": 0,
-      "propTrue": false
-    },
-    {
-      "ts": 1784060478302,
-      "time": "20:21:18",
-      "action": "goal",
-      "confirmed": true,
-      "seq": 618,
-      "scoreCarried": false,
-      "spain": 2,
-      "france": 0,
-      "propTrue": false
-    },
-    {
-      "ts": 1784060481148,
-      "time": "20:21:21",
-      "action": "goal",
-      "confirmed": true,
-      "seq": 620,
-      "scoreCarried": false,
-      "spain": 2,
-      "france": 0,
-      "propTrue": false
-    },
-    {
-      "ts": 1784060549958,
-      "time": "20:22:29",
-      "action": "goal",
-      "confirmed": false,
-      "seq": 638,
-      "scoreCarried": false,
-      "spain": 3,
-      "france": 0,
-      "propTrue": true
-    },
-    {
-      "ts": 1784060561485,
-      "time": "20:22:41",
-      "action": "var",
-      "confirmed": false,
-      "seq": 639,
-      "scoreCarried": true,
-      "spain": 3,
-      "france": 0,
-      "propTrue": true
-    },
-    {
-      "ts": 1784060562861,
-      "time": "20:22:42",
-      "action": "var",
-      "confirmed": true,
-      "seq": 640,
-      "scoreCarried": true,
-      "spain": 3,
-      "france": 0,
-      "propTrue": true
-    },
-    {
-      "ts": 1784060573720,
-      "time": "20:22:53",
-      "action": "var_end",
-      "confirmed": true,
-      "seq": 641,
-      "scoreCarried": false,
-      "spain": 3,
-      "france": 0,
-      "propTrue": true
-    },
-    {
-      "ts": 1784060575609,
-      "time": "20:22:55",
-      "action": "action_discarded",
-      "confirmed": null,
-      "seq": 642,
-      "scoreCarried": false,
-      "spain": 2,
-      "france": 0,
-      "propTrue": false
-    },
-    {
-      "ts": 1784061929766,
-      "time": "20:45:29",
-      "action": "action_discarded",
-      "confirmed": null,
-      "seq": 866,
-      "scoreCarried": false,
-      "spain": 2,
-      "france": 0,
-      "propTrue": false
-    },
-    {
-      "ts": 1784063054751,
-      "time": "21:04:14",
-      "action": "game_finalised",
-      "confirmed": null,
-      "seq": 1026,
-      "scoreCarried": false,
-      "spain": 2,
-      "france": 0,
-      "propTrue": false
-    }
-  ],
-  "phantom": {
-    "publishedAt": "20:22:29",
-    "discardedAt": "20:22:55",
-    "durationSeconds": 26,
-    "scoreDuring": "0-3",
-    "scoreActual": "0-2"
-  },
-  "naive": {
-    "time": "20:22:29",
-    "state": "SETTLED",
-    "reason": "stream says \"Spain total goals > 2\" is true (action=goal) -> PAY OUT"
-  },
-  "guarded": {
-    "state": "RETRACTED",
-    "decisions": [
-      {
-        "time": "20:22:29",
-        "state": "PROVISIONAL",
-        "reason": "\"Spain total goals > 2\" reads true but event is PROVISIONAL (Confirmed:false) -> UI only, money HELD"
-      },
-      {
-        "time": "20:22:41",
-        "state": "PROVISIONAL",
-        "reason": "VAR review OPEN -> gate BLOCKED, no promotion possible"
-      },
-      {
-        "time": "20:22:53",
-        "state": "PROVISIONAL",
-        "reason": "VAR review closed -> gate re-armed (awaiting the corrected score)"
-      },
-      {
-        "time": "20:22:55",
-        "state": "RETRACTED",
-        "reason": "RETRACTION: the event backing \"Spain total goals > 2\" was withdrawn. Score reverts. No payout."
-      },
-      {
-        "time": "21:04:14",
-        "state": "RETRACTED",
-        "reason": "game_finalised -> \"Spain total goals > 2\" is FALSE on the final record. Refund."
-      }
-    ]
-  },
-  "truth": {
-    "finalisedAt": "21:04:14",
-    "spainGoals": 2,
-    "franceGoals": 0,
-    "propTrue": false
-  },
-  "ticket": {
-    "perSide": 0.05,
-    "escrow": 0.1,
-    "unit": "SOL",
-    "yes": "maker",
-    "no": "taker",
-    "winner": "NO",
-    "earlyBySeconds": 2505
-  },
-  "onchain": {
-    "mainnetOracle": "9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA",
-    "devnetOracle": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J",
-    "scoresRoot": "CA9P9cpaaHLML54f7HpDjJPtknyTAbaKs8uaoZruuAfs",
-    "epochDay": 20648,
-    "anchoringLagMinutes": 1.4,
-    "verdicts": [
-      {
-        "question": "Spain goals > 2  (the phantom 3rd goal)",
-        "answer": false
-      },
-      {
-        "question": "Spain goals > 1  (control: they scored 2)",
-        "answer": true
-      }
-    ]
-  },
-  "guards": [
-    {
-      "n": 1,
-      "name": "Fixture binding",
-      "blocks": "a valid proof from a different match",
-      "error": "FixtureMismatch"
-    },
-    {
-      "n": 2,
-      "name": "Finality",
-      "blocks": "an honest half-time proof settling a full-match prop early",
-      "error": "ProofNotFinal"
-    },
-    {
-      "n": 3,
-      "name": "Predicate binding",
-      "blocks": "the settler swapping the question to one they win",
-      "error": "PredicateMismatch"
-    }
-  ],
-  "schemaDiff": {
-    "columns": [
-      "as-of time ≠ publish time",
-      "supersession link",
-      "can express a revision"
-    ],
-    "rows": [
-      {
-        "feed": "Chainlink",
-        "asOf": false,
-        "link": false,
-        "revision": false,
-        "note": "append-only; a correction is identical to a price move"
-      },
-      {
-        "feed": "Pyth",
-        "asOf": false,
-        "link": false,
-        "revision": false,
-        "note": "confidence is dispersion now, not maturity"
-      },
-      {
-        "feed": "UMA / Polymarket",
-        "asOf": false,
-        "link": false,
-        "revision": false,
-        "note": "2h liveness guards a liar, not a revision"
-      },
-      {
-        "feed": "TxLINE",
-        "asOf": true,
-        "link": true,
-        "revision": true,
-        "note": "batch min/max + period; Confirmed:false → action_discarded"
-      }
-    ]
-  }
-};
-const $ = (id) => document.getElementById(id);
-const dash = (s) => s.replace('-', '–');
-
-$('eyebrow').textContent = `${D.fixture.stage} · ${D.fixture.name} · ${D.fixture.date} · fixture ${D.fixture.id}`;
-$('h-was').textContent = dash(D.phantom.scoreDuring);
-$('lede').innerHTML = `For <b>${D.phantom.durationSeconds} seconds</b> on 14 July, TxLINE's live feed asserted a scoreline that never existed, `
-  + `then VAR erased it. A Merkle root would have proved TxODDS <b>published</b> ${dash(D.phantom.scoreDuring)}. `
-  + `It would not have proved it was <b>true</b>. Every on-chain oracle we checked can prove publication. `
-  + `TxLINE's schema is the only one that can also say: <b>this was revised</b>.`;
-$('teams').textContent = D.fixture.name.replace(' v ', '  ·  ');
-$('b-was').textContent = dash(D.phantom.scoreDuring);
-$('b-now').textContent = dash(D.phantom.scoreActual);
-$('b-nowlbl').textContent = `final · game_finalised ${D.truth.finalisedAt}`;
-$('prop-lbl').textContent = D.prop.label;
-
-const mark = (b) => b ? '<span class="yes">yes</span>' : '<span class="no">no</span>';
-$('matrix').innerHTML = `<table>
-  <thead><tr><th>settlement feed</th>${D.schemaDiff.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>
-  <tbody>${D.schemaDiff.rows.map(r => `
-    <tr class="${r.feed === 'TxLINE' ? 'own' : ''}">
-      <td><span class="feed">${r.feed}</span><br><span class="note">${r.note}</span></td>
-      <td>${mark(r.asOf)}</td><td>${mark(r.link)}</td><td>${mark(r.revision)}</td>
-    </tr>`).join('')}</tbody>
-</table>`;
-
-// The revision, instantiated from the frozen capture. Every field is read straight from D
-// (which is the replayed feed), so a judge can cross-check each line against `npm run replay`.
-(() => {
-  const pub = D.timeline.find(e => e.action === 'goal' && e.confirmed === false && e.spain === 3);
-  const sup = D.timeline.find(e => e.action === 'action_discarded' && e.spain === 2 && e.seq > (pub ? pub.seq : 0));
-  const fin = D.truth;
-  if (!pub || !sup) { $('proofobj').innerHTML = ''; return; }
-  const rows = [
-    ['published record', `seq ${pub.seq} · ${pub.time} · Confirmed:false · ${dash('0-'+pub.spain)}`],
-    ['maturity flag ≠ timestamp', `the record is marked provisional at publish, before any correction exists`],
-    ['supersession link', `seq ${pub.seq} → seq ${sup.seq} · action_discarded · ${sup.time} · reverts to ${dash('0-'+sup.spain)}`],
-    ['final record', `game_finalised · ${fin.finalisedAt} · ${dash('0-'+fin.spainGoals)}`],
-    ['on-chain answer', `${D.prop.label} = ${String(D.onchain.verdicts[0].answer).toUpperCase()} (proof built from corrected data)`],
-  ];
-  $('proofobj').innerHTML = rows.map(([k, v]) =>
-    `<div class="q"><span class="qt">${k}</span><span class="qa" style="font-size:12px;font-weight:400;color:var(--mute);text-align:right">${v}</span></div>`
-  ).join('');
-})();
-
-const NAMES = { goal:'Goal', var:'VAR review opened', var_end:'VAR review closed', action_discarded:'Action discarded', game_finalised:'Game finalised' };
-$('tl').innerHTML = D.timeline.map(e => {
-  const standing = e.spain === 3;                       // the phantom is up
-  const noise = !standing && e.action === 'action_discarded' && e.time < '20:00:00';
-  const cls = standing ? 'r ph' : noise ? 'r dim' : 'r';
-  const tag = e.confirmed === false ? '<span class="tag">provisional</span>'
-            : e.confirmed === true ? '<span class="tag">confirmed</span>' : '';
-  const carried = e.scoreCarried ? '<span class="tag">inherited</span>' : '';
-  return `<div class="${cls}"><span class="t">${e.time}</span>`
-       + `<span class="a">${NAMES[e.action] || e.action}${tag}${carried}</span>`
-       + `<span class="s">${e.france}–${e.spain}</span></div>`;
-}).join('');
-
-const T = D.ticket;
-$('ticket').innerHTML = `
-  <div class="slip">
-    <div class="slip-h">
-      <div>
-        <div class="k">The question</div>
-        <div class="slip-q">${D.prop.label}</div>
-        <div class="slip-m">${D.prop.market} · ${D.fixture.name} · ${D.fixture.date}</div>
-      </div>
-      <div>
-        <div class="k">In escrow</div>
-        <div class="slip-amt">${T.escrow.toFixed(2)}<i>${T.unit}</i></div>
-      </div>
+  <h2>A proof shows they published it, not that it happened</h2>
+  <p class="sub">TxLINE anchors every score to Solana as a Merkle proof, so anyone can verify what the
+  feed said and when. That is necessary and nowhere near sufficient. A proof of the 0-3 scoreline is a
+  perfectly valid proof: it proves TxODDS published 0-3. It does not prove Spain scored. Verifying the
+  cryptography and settling on the result are two different jobs, and only one of them is hard.</p>
+  <div class="facts">
+    <div class="f">
+      <div class="v">26s</div>
+      <div class="l">the phantom stood</div>
+      <div class="d">Published 20:22:29, withdrawn 20:22:55. Long enough to settle a market.</div>
     </div>
-    <div class="sides">
-      <div class="side${T.winner === 'YES' ? '' : ' lost'}">
-        <span class="sd">YES</span><span class="sv">${T.perSide} ${T.unit}</span><span class="sw">${T.yes}</span>
-      </div>
-      <div class="side${T.winner === 'NO' ? '' : ' lost'}">
-        <span class="sd">NO</span><span class="sv">${T.perSide} ${T.unit}</span><span class="sw">${T.no}</span>
-      </div>
+    <div class="f">
+      <div class="v">41:45</div>
+      <div class="l">how early the stream paid</div>
+      <div class="d">A market following the feed released the pot 41 minutes 45 seconds before the whistle.</div>
     </div>
-    <div class="slip-f">
-      <span>Settled ${D.truth.finalisedAt} on a Merkle proof, verified on-chain</span>
-      <span><b>${T.winner} takes ${T.escrow.toFixed(2)} ${T.unit}</b> · Spain scored ${D.truth.spainGoals}</span>
+    <div class="f">
+      <div class="v">0.10</div>
+      <div class="l">SOL settled on mainnet</div>
+      <div class="d">Real money, into escrow and out the correct side, decided by TxLINE's production oracle.</div>
     </div>
-  </div>`;
-
-$('engines').innerHTML = `
-  <div class="card bad">
-    <div class="k">Settled from the stream</div>
-    <div class="v"><s>Paid out</s></div>
-    <p>Released the ${D.ticket.escrow.toFixed(2)} ${D.ticket.unit} to YES on the provisional goal, ${Math.floor(D.ticket.earlyBySeconds / 60)} minutes ${D.ticket.earlyBySeconds % 60} seconds before the final whistle. ${D.phantom.durationSeconds} seconds later VAR erased the goal. The money is gone and the chain will not give it back.</p>
-    <div class="when">${D.naive.time} · ${D.naive.state}</div>
   </div>
-  <div class="card good">
-    <div class="k">Settled from the proof</div>
-    <div class="v">Held</div>
-    <p>Never promoted the provisional goal. Blocked while VAR was open. Released nothing, and was proved right at the final whistle.</p>
-    <div class="when">${D.truth.finalisedAt} · prop resolved ${String(D.truth.propTrue).toUpperCase()}</div>
-  </div>`;
+</div></section>
 
-$('guards').innerHTML = D.guards.map(g => `
-  <div class="g"><div class="n">Guard ${g.n} / 3</div><h3>${g.name}</h3><p>Blocks ${g.blocks}.</p><code>${g.error}</code></div>`).join('');
+<section><div class="wrap">
+  <h2>Three guards, and none of them are cryptography</h2>
+  <p class="sub">Settling is permissionless: anyone may call it, because the caller has no discretion.
+  Every input is checked against state frozen when the market opened, before anyone knew the answer.
+  All three run <b>before</b> the oracle is asked, so the escrow refuses to verify a proof it has no
+  business verifying.</p>
+  <div class="three">
+    <div class="g">
+      <div class="n">Guard 1 / 3</div>
+      <h3>Fixture binding</h3>
+      <p>A real, valid, unforged proof from a different match is still a real proof. It settles nothing here.</p>
+      <code>FixtureMismatch</code>
+    </div>
+    <div class="g">
+      <div class="n">Guard 2 / 3</div>
+      <h3>Finality</h3>
+      <p>An honest half-time proof honestly proves the half-time score, and would settle a full-match market early.</p>
+      <code>ProofNotFinal</code>
+    </div>
+    <div class="g">
+      <div class="n">Guard 3 / 3</div>
+      <h3>Predicate binding</h3>
+      <p>Without it the settler picks the question, and picks the one they win.</p>
+      <code>PredicateMismatch</code>
+    </div>
+  </div>
+</div></section>
 
-$('chain').innerHTML = D.onchain.verdicts.map(v => `
-  <div class="q"><span class="qt">${v.question}</span><span class="qa ${v.answer ? 't' : 'f'}">${String(v.answer).toUpperCase()}</span></div>`).join('');
+<section><div class="wrap">
+  <h2>The whole product is six commands</h2>
+  <p class="sub">There is no admin key and nobody to appeal to. A market is opened, matched, settled
+  from a proof, and collected. This is a real run against the live program, copied from the terminal.</p>
+  <div class="term">
+    <div class="term-h">npm run market:attack &nbsp;·&nbsp; mainnet-beta &nbsp;·&nbsp; real money on the table</div>
+<pre><i>  proof      :</i> England v Argentina, the OTHER semi-final (fixture 18241006)
+<i>  shape      :</i> same stat key, same period, batch runs past the whistle
+<i>  expect     :</i> REJECTED by guard 1. The proof is real. It is the wrong match.
 
-$('meta').innerHTML = [
-  // The verdicts above come from verify.ts, which asks the MAINNET oracle. Label the one
-  // that actually answered, not the devnet twin.
-  `mainnet oracle ${D.onchain.mainnetOracle.slice(0,10)}…`,
-  `scores root ${D.onchain.scoresRoot.slice(0,10)}…`,
-  `epoch day ${D.onchain.epochDay}`,
-  `anchoring lag ${D.onchain.anchoringLagMinutes} min`,
-  `${D.eventCount} feed events`,
-].map(s => `<span>${s}</span>`).join('');
+  <b>OK   REJECTED: GUARD 1: proof is for a different fixture</b>
 
-$('foot').innerHTML = `
-  <b>Data</b>: ${D.generatedFrom}<br>
-  <b>Why this page needs no wallet</b>: TxLINE's free tier requires an on-chain subscribe transaction, and the
-  hackathon terms say judges shall not be required to establish a blockchain wallet. So this data was fetched once
-  with our subscription and frozen here. It is also insurance: /api/scores/historical serves only a two-week window,
-  so this match ages out of the API on ~28 Jul, the day before judging.<br>
-  <b>Reproduce</b>: <code>npm run replay</code> · <code>npm run verify</code> · <code>npm run demo</code>`;
-</script>
+  The money did not move. Nothing was verified: the escrow refused before
+  it ever asked the oracle.</pre>
+  </div>
+  <div class="term">
+    <div class="term-h">npm run market:settle &nbsp;→&nbsp; npm run market:claim</div>
+<pre><i>  proof      :</i> France v Spain final batch, period 100 (fixture 18237038)
+<i>  predicate  :</i> "Spain > 2", the question the prop was opened with
+
+  <b>OK   SETTLED. "Spain total goals > 2" = FALSE</b>
+      winner: TAKER (NO)
+
+  <b>OK  paid. +0.1000 SOL</b>
+
+  Spain scored 2. The prop was false. The NO side was paid, on a Merkle proof,
+  by a program with no admin key and nobody to appeal to.</pre>
+  </div>
+  <div class="cta">
+    <a class="pill solid" href="/market">Watch it on chain</a>
+    <a class="pill" href="https://github.com/Morkeeth/overturn#or-drive-it-yourself-one-step-at-a-time">Run it yourself</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Program <a href="https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv">HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv</a>, live on mainnet-beta and devnet at the same address.<br>
+  Settled by CPI into TxLINE's txoracle. Data from TxLINE: score feed, stat-validation Merkle proofs, fixtures, historical odds.<br>
+  Built for the TxODDS x Solana World Cup Hackathon · Prediction Markets &amp; Settlement.
+</div></footer>
+
 </body>
 </html>

@@ -88,7 +88,8 @@
 <nav><div class="wrap">
   <div class="mark">Over<s>turn</s></div>
   <div class="navlinks">
-    <a class="pill" href="./">The story</a>
+    <a class="pill" href="/">Home</a>
+    <a class="pill" href="/story">The story</a>
     <a class="pill" href="https://github.com/Morkeeth/overturn">Repo</a>
     <span class="pill" id="asof">reading chain…</span>
   </div>
@@ -110,6 +111,15 @@
   side must win. The chain decided that, not us.</p>
   <div class="grid" id="clusters"></div>
   <div id="rpcnote"></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>The feed, right now</h2>
+  <p class="sub">Read live from TxLINE through this app's own backend, so the subscription token
+  stays on the server. Two numbers, deliberately: what the feed <b>asserts</b> at this instant, which
+  may still be provisional, and what has actually been <b>confirmed</b>. On 14 July those two numbers
+  disagreed for 26 seconds, and that gap is the entire product.</p>
+  <div id="feed"></div>
 </div></section>
 
 <section><div class="wrap">
@@ -170,10 +180,10 @@ function question(p) {
 // but returns 403 to a browser origin, so it cannot be the only one: a judge opening this
 // page is a browser. publicnode answers CORS preflight and is first for that reason.
 const CLUSTERS = [
-  { name: 'mainnet-beta',
+  { key: 'mainnet', name: 'mainnet-beta',
     rpcs: ['https://solana-rpc.publicnode.com', 'https://api.mainnet-beta.solana.com'],
     prop: '9bifQAHTDMR5o5nLkdVoCXh3pmKApxkfBbu2QaeB94r9', q: '' },
-  { name: 'devnet',
+  { key: 'devnet', name: 'devnet',
     rpcs: ['https://api.devnet.solana.com', 'https://devnet.helius-rpc.com/?api-key=public'],
     prop: '38LzLkoyk6xMaFEFJ1jKyWNCLoe6qcUNrtvsQW3j4bUc', q: '?cluster=devnet' },
 ];
@@ -270,16 +280,89 @@ function render(c, data, err) {
   </div></div>`;
 }
 
+/**
+ * Read a prop. Prefers this app's own API, which reads the chain server-side with an
+ * endpoint that does not 403 a browser. Falls back to hitting public RPC directly, so the
+ * page still works when served as plain static files with no backend at all.
+ */
+async function readProp(c) {
+  try {
+    const r = await fetch(`/api/prop?cluster=${c.key}`);
+    if (r.ok) {
+      const j = await r.json();
+      if (!j.error) {
+        return {
+          prop: { ...j, statKey: j.statKey, fixtureId: j.fixtureId },
+          lamports: j.heldLamports,
+          via: 'api',
+        };
+      }
+    }
+  } catch { /* no backend here; fall through to direct RPC */ }
+
+  const res = await rpc(c.rpcs, 'getAccountInfo', [c.prop, { encoding: 'base64', commitment: 'confirmed' }]);
+  if (!res || !res.value) throw new Error('account not found');
+  const raw = Uint8Array.from(atob(res.value.data[0]), (ch) => ch.charCodeAt(0));
+  return { prop: decodeProp(raw), lamports: res.value.lamports, via: 'rpc' };
+}
+
+/**
+ * The live feed panel. Needs the backend (the TxLINE token is not in this page and must
+ * never be), so on a static host it says so plainly rather than pretending.
+ */
+async function loadFeed() {
+  const el = document.getElementById('feed');
+  const FIXTURES_TO_SHOW = [18237038, 18257739, 18257865];
+  try {
+    const fr = await fetch('/api/fixtures');
+    if (!fr.ok) throw new Error('no backend');
+    const { fixtures } = await fr.json();
+    if (!fixtures) throw new Error('no fixtures');
+
+    const wanted = fixtures.filter((f) => FIXTURES_TO_SHOW.includes(f.fixtureId));
+    const feeds = await Promise.all(wanted.map(async (f) => {
+      try {
+        const r = await fetch(`/api/feed?fixtureId=${f.fixtureId}`);
+        return r.ok ? { f, d: await r.json() } : { f, d: null };
+      } catch { return { f, d: null }; }
+    }));
+
+    el.innerHTML = '<div class="rcpt" style="margin-top:22px">' + feeds.map(({ f, d }) => {
+      const kick = new Date(f.startTime);
+      const when = f.upcoming
+        ? 'kicks off ' + kick.toISOString().slice(0, 16).replace('T', ' ') + ' UTC'
+        : (d && d.finalisedAt ? 'final ' + d.finalisedAt.slice(11, 19) + ' UTC' : 'played');
+      let right;
+      if (!d || d.error) right = '<span class="sig">feed unavailable</span>';
+      else if (!d.asserted) right = '<span class="sig">no score events yet</span>';
+      else {
+        const a = `${d.asserted.home}–${d.asserted.away}`;
+        const c = d.confirmed ? `${d.confirmed.home}–${d.confirmed.away}` : a;
+        const disagree = a !== c;
+        right = `<span class="sig">${d.events} events${d.varOpen ? ' · VAR OPEN' : ''}</span>`
+          + `<span style="margin-left:16px;font-weight:700;color:${disagree ? 'var(--faint)' : 'var(--ink)'}">`
+          + (disagree ? `<s>${a}</s> → ${c}` : c) + '</span>';
+      }
+      return `<a href="/story" style="cursor:default"><span class="what">${f.home} v ${f.away}
+        <span style="color:var(--dim)"> &nbsp;${when}</span></span><span>${right}</span></a>`;
+    }).join('') + '</div>';
+  } catch {
+    el.innerHTML = `<div class="warn" style="margin-top:22px">The live feed panel needs this app's backend,
+      because TxLINE's token is a subscription credential and putting it in a page would hand our quota to
+      anyone who read the source. You are looking at a static copy with no backend attached. The chain
+      panels above are unaffected: they read Solana directly.</div>`;
+  }
+}
+
 async function load() {
   document.getElementById('receipts').innerHTML = RECEIPTS.map(([what, sig]) =>
     `<a href="https://explorer.solana.com/tx/${sig}"><span class="what">${what}</span><span class="sig">${short(sig)}</span></a>`).join('');
 
+  loadFeed();
+
   const out = await Promise.all(CLUSTERS.map(async (c) => {
     try {
-      const res = await rpc(c.rpcs, 'getAccountInfo', [c.prop, { encoding: 'base64', commitment: 'confirmed' }]);
-      if (!res || !res.value) throw new Error('account not found');
-      const raw = Uint8Array.from(atob(res.value.data[0]), (ch) => ch.charCodeAt(0));
-      return render(c, { prop: decodeProp(raw), lamports: res.value.lamports }, null);
+      return render(c, await readProp(c), null);
     } catch (e) {
       return render(c, null, String(e.message || e));
     }
