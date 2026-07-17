@@ -1,4 +1,7 @@
-// The demo: three attacks and one honest settlement, against a real World Cup semi-final.
+// The demo: two attacks and one honest settlement, against a real World Cup semi-final.
+//
+// These exercise guards 2 and 3. Guard 1 (fixture binding, lib.rs FixtureMismatch) is not
+// attacked here: it needs a valid proof from a different fixture, and the demo is pinned to one.
 //
 // Prop under test:  "Spain total goals > 2"  (an over-2.5 market)
 // Ground truth:     Spain scored 2. The prop is FALSE. The NO side must win.
