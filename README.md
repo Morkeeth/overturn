@@ -82,6 +82,27 @@ npm run demo     # the escrow: three attacks with genuine proofs, one honest set
 
 `replay` needs nothing. `verify` and `demo` need a TxLINE subscription (see below).
 
+### Or drive it yourself, one step at a time
+
+`demo` tells the whole story and exits. These are the same escrow, one instruction at a
+time, which is what actually using it looks like:
+
+```bash
+npm run market:open     # maker takes YES, freezes the question, locks 0.05 SOL
+npm run market:take     # taker matches it. The pot is now unspendable by hand
+npm run market:status   # read the prop off the chain (no wallet, no signature)
+npm run market:attack   # settle it with the OTHER semi-final's real proof. Guard 1 refuses
+npm run market:settle   # settle it with the real proof. The oracle decides
+npm run market:claim    # the winner collects. The money moves
+```
+
+Every step prints an explorer link. The cluster comes from `RPC_URL`, so the identical
+flow runs on mainnet:
+
+```bash
+RPC_URL=https://api.mainnet-beta.solana.com ORACLE=9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA npm run market:open
+```
+
 Demo output, against the live devnet program. One attack per guard, attack N fires guard N:
 
 ```
