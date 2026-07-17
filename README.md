@@ -103,6 +103,29 @@ wallet, no install. Open the file.
 It is also insurance: `/api/scores/historical` serves only a two-week window, so this match ages out
 of the API around 28 July, the day before judging.
 
+## Deployed
+
+`overturn_escrow` is live on **Solana devnet**. Nothing here asks you to take that on trust.
+
+| | |
+|---|---|
+| Program ID | `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv` |
+| Cluster | devnet |
+| Explorer | https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv?cluster=devnet |
+| Deploy tx | `5woQBTBwb8FogJBSqLFD56w1NGAig4kbxDYkD7aYmFsyUANnRJisuBi7xnd7hcFgMuzav3JycUo4LvtUwurbbRW3` |
+| Upgrade authority | `9Fw49bq19uVFHHHubNSpdn3ZQGy9nFSaJeLEdDbSDK1s` |
+
+Verify the deployed address is the one the source claims:
+
+```
+solana program show HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv --url devnet
+grep declare_id overturn_escrow/programs/overturn_escrow/src/lib.rs
+```
+
+Both print `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`, and the on-chain account reports
+`Executable: true` at `207712` bytes. A deploy log proves we published a program. The check above
+proves it is *this* program. That distinction is the whole project.
+
 ## TxLINE endpoints used
 
 | Endpoint | Use |
