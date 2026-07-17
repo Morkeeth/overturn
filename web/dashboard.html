@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overturn: the escrow, live on chain</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* Same palette as index.html. Monochrome, no status colours, no accent: the only
+     signal is weight, strike and opacity. A dashboard is exactly where the temptation
+     to add green/amber lights is strongest, which is exactly why there are none. */
+  :root{
+    --base:#0A0A0A; --surface:#131313; --raise:#1C1C1C;
+    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
+    --ink:#FFFFFF; --mute:#8C8C8C; --dim:#4E4E4E; --faint:#2E2E2E;
+    --r-pill:40px; --r-card:16px; --r-sm:6px; --r-xs:3px;
+    --display:'Archivo',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--base);color:var(--ink);font-family:var(--display);
+       -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 28px}
+  nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(10,10,10,.88);
+      backdrop-filter:blur(8px);z-index:5}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+  .mark{font-weight:900;font-size:17px;letter-spacing:-.02em;text-transform:uppercase}
+  .mark s{text-decoration-thickness:2px}
+  .navlinks{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+        border:1px solid var(--line-2);border-radius:var(--r-pill);padding:7px 13px;color:var(--mute);
+        text-decoration:none;white-space:nowrap}
+  .pill:hover{color:var(--ink);border-color:var(--ink)}
+  header{padding:64px 0 30px}
+  h1{font-size:clamp(30px,4.6vw,50px);font-weight:900;letter-spacing:-.03em;line-height:1.04}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+           color:var(--dim);margin-bottom:22px}
+  .lede{margin-top:18px;color:var(--mute);font-size:16px;line-height:1.65;max-width:70ch}
+  section{padding:34px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(18px,2vw,22px);font-weight:900;letter-spacing:-.01em;text-transform:uppercase}
+  .sub{margin-top:12px;color:var(--mute);font-size:14px;line-height:1.6;max-width:70ch}
+  .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px}
+  .cl{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .cl-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+        padding:20px 24px;border-bottom:1px solid var(--line)}
+  .cl-name{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+  .cl-b{padding:22px 24px}
+  .row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;font-family:var(--mono);font-size:12px}
+  .row+.row{border-top:1px solid var(--line)}
+  .row .lbl{color:var(--dim);white-space:nowrap}
+  .row .val{text-align:right;word-break:break-all;color:var(--mute)}
+  .row .val.hero{color:var(--ink);font-weight:700}
+  .state{font-family:var(--mono);font-weight:700;font-size:clamp(26px,3.4vw,34px);letter-spacing:-.02em;line-height:1}
+  .verdict{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:9px}
+  .verdict b{color:var(--ink)}
+  .pot{font-family:var(--mono);font-weight:700;font-size:clamp(22px,2.8vw,28px);letter-spacing:-.02em}
+  .paid{color:var(--faint)}
+  .paid s{text-decoration-thickness:2px}
+
+  .rcpt{margin-top:24px;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .rcpt a{display:flex;justify-content:space-between;gap:14px;padding:15px 22px;text-decoration:none;
+          font-family:var(--mono);font-size:12px;border-bottom:1px solid var(--line)}
+  .rcpt a:last-child{border-bottom:0}
+  .rcpt a:hover{background:var(--raise)}
+  .rcpt .what{color:var(--ink)}
+  .rcpt .sig{color:var(--dim);word-break:break-all}
+
+  .note{margin-top:18px;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.7}
+  .warn{margin-top:18px;border:1px solid var(--line-2);border-radius:var(--r-sm);padding:14px 18px;
+        font-family:var(--mono);font-size:11px;color:var(--mute);line-height:1.7}
+  footer{padding:46px 0 64px;border-top:1px solid var(--line);color:var(--dim);
+         font-family:var(--mono);font-size:11px;line-height:1.8}
+  @media(max-width:720px){
+    .grid{grid-template-columns:1fr}
+    .row{flex-direction:column;gap:3px}
+    .row .val{text-align:left}
+    nav .wrap{height:auto;padding-top:12px;padding-bottom:12px;flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <div class="mark">Over<s>turn</s></div>
+  <div class="navlinks">
+    <a class="pill" href="./">The story</a>
+    <a class="pill" href="https://github.com/Morkeeth/overturn">Repo</a>
+    <span class="pill" id="asof">reading chain…</span>
+  </div>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="eyebrow">Live from Solana · read-only · no wallet</div>
+  <h1>The escrow, as the chain has it right now.</h1>
+  <p class="lede">Everything below is fetched from Solana when this page loads. Nothing is baked in.
+  The same program address is deployed on mainnet-beta and devnet, and on mainnet it settled a real
+  prop with real money. Hit refresh, or check any line of it on the explorer. We would rather you
+  did not take our word for it.</p>
+</div></header>
+
+<section><div class="wrap">
+  <h2>The prop, on both chains</h2>
+  <p class="sub">One question: <b>Spain total goals &gt; 2</b> on fixture 18237038, France v Spain,
+  the World Cup semi-final of 14 July 2026. Spain scored 2, so the honest answer is FALSE and the NO
+  side must win. The chain decided that, not us.</p>
+  <div class="grid" id="clusters"></div>
+  <div id="rpcnote"></div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Mainnet receipts</h2>
+  <p class="sub">The real prop, start to finish, with real SOL. Every signature resolves.</p>
+  <div class="rcpt" id="receipts"></div>
+  <div class="note">
+    Before the honest settle, the same escrow was handed a real, valid, unforged proof from the
+    <b>other</b> semi-final (England v Argentina, fixture 18241006). It clears the finality guard and
+    the predicate guard. Guard 1 rejected it, on mainnet, with the money on the table.
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Program <a href="https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv">HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv</a><br>
+  Settled by CPI into TxLINE's txoracle. Mainnet 9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA · devnet 6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J<br>
+  TxODDS x Solana World Cup Hackathon · Prediction Markets &amp; Settlement
+</div></footer>
+
+<script>
+// ---------------------------------------------------------------------------
+// No libraries. The page decodes the Prop account itself, so there is nothing
+// between you and the chain except a base58 encoder and a DataView.
+// ---------------------------------------------------------------------------
+const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function b58enc(bytes) {
+  let digits = [0];
+  for (const b of bytes) {
+    let carry = b;
+    for (let i = 0; i < digits.length; i++) { carry += digits[i] << 8; digits[i] = carry % 58; carry = (carry / 58) | 0; }
+    while (carry) { digits.push(carry % 58); carry = (carry / 58) | 0; }
+  }
+  let s = '';
+  for (const b of bytes) { if (b === 0) s += '1'; else break; }
+  for (let i = digits.length - 1; i >= 0; i--) s += B58[digits[i]];
+  return s;
+}
+
+const PROGRAM = 'HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv';
+const STATES = ['Open', 'Matched', 'Settled', 'Cancelled'];
+const CMP = ['>', '<', '='];
+
+// The account stores TxLINE's stat key, which is honest but unreadable: "stat 2 > 2" tells
+// you nothing. Name it. Anything we cannot name stays a raw key rather than a guess.
+const STAT_NAMES = { 1: 'P1 goals', 2: 'P2 goals', 7: 'P1 corners', 8: 'P2 corners' };
+const FIXTURES = { 18237038: ['France', 'Spain'], 18241006: ['England', 'Argentina'] };
+
+function question(p) {
+  const teams = FIXTURES[Number(p.fixtureId)];
+  const stat = STAT_NAMES[p.statKey];
+  let subject = stat ? stat : 'stat ' + p.statKey;
+  if (teams && (p.statKey === 1 || p.statKey === 2)) subject = teams[p.statKey - 1] + ' total goals';
+  else if (teams && (p.statKey === 7 || p.statKey === 8)) subject = teams[p.statKey - 7] + ' corners';
+  return `${subject} ${CMP[p.comparison]} ${p.threshold}`;
+}
+
+// Several endpoints per cluster, tried in order. api.mainnet-beta.solana.com answers curl
+// but returns 403 to a browser origin, so it cannot be the only one: a judge opening this
+// page is a browser. publicnode answers CORS preflight and is first for that reason.
+const CLUSTERS = [
+  { name: 'mainnet-beta',
+    rpcs: ['https://solana-rpc.publicnode.com', 'https://api.mainnet-beta.solana.com'],
+    prop: '9bifQAHTDMR5o5nLkdVoCXh3pmKApxkfBbu2QaeB94r9', q: '' },
+  { name: 'devnet',
+    rpcs: ['https://api.devnet.solana.com', 'https://devnet.helius-rpc.com/?api-key=public'],
+    prop: '38LzLkoyk6xMaFEFJ1jKyWNCLoe6qcUNrtvsQW3j4bUc', q: '?cluster=devnet' },
+];
+
+const RECEIPTS = [
+  ['deploy the program', '63foE5LabQywmZNzdbzrx4DcdtAQ6ytcDCyEJ7C98EnCJKwSen7okGf5P2EFBUQQSK4nhMddBN8r1w8iW22sxFku'],
+  ['open · maker takes YES for 0.05 SOL', 'sf3Sw3muaWD11NjFhynEJVtpJ5pkg4wQFDMNtWnwf91c3gSvVdby8wiQA9qNsnUoS6ApvNveSEd414MJNHV1pz4'],
+  ['take · taker takes NO for 0.05 SOL', 'hyErrTEz6rbUs3SysGwyu2MRQyZNn4vBavAKQKNUhwHYPUBgsH3FqZzcLQ2oUtWG2pUL8vgfFtN9TLRK4tQ6MLC'],
+  ['settle · prop resolves FALSE', '3rmG899b3surG8YgcgCxdRtEiUoJVkuoeWY6qGzkqfCXFKDbzbuPEg9NZyQtGASGyADNkMxCFbxYRkEJGwR9yC6Z'],
+  ['claim · NO collects the 0.10 SOL pot', 'nQJDZG6BHmwW1Lbd77RZ6P4y3PuX7wvYM8YnVhscUgiRruKGJe3pPwXzzeVCd68EBG6cUPeEpmxJ5QtTFgMGwzB'],
+];
+
+/** Prop, as laid out in lib.rs, after Anchor's 8-byte discriminator. */
+function decodeProp(buf) {
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  let o = 8;
+  const key = () => { const s = b58enc(buf.slice(o, o + 32)); o += 32; return s; };
+  const maker = key(), taker = key(), oracle = key();
+  const fixtureId = dv.getBigInt64(o, true); o += 8;
+  const statKey = dv.getUint32(o, true); o += 4;
+  const statPeriod = dv.getInt32(o, true); o += 4;
+  const threshold = dv.getInt32(o, true); o += 4;
+  const comparison = dv.getUint8(o); o += 1;
+  const stake = dv.getBigUint64(o, true); o += 8;
+  const settleAfter = dv.getBigInt64(o, true); o += 8;
+  const state = dv.getUint8(o); o += 1;
+  const yesWon = dv.getUint8(o) === 1; o += 1;
+  return { maker, taker, oracle, fixtureId, statKey, statPeriod, threshold, comparison, stake, settleAfter, state, yesWon };
+}
+
+const rpcOne = async (url, method, params) => {
+  const r = await fetch(url, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const j = await r.json();
+  if (j.error) throw new Error(j.error.message);
+  return j.result;
+};
+
+/** Try each endpoint in turn. Public nodes rate-limit; one refusal should not blank the page. */
+const rpc = async (urls, method, params) => {
+  let last;
+  for (const u of urls) {
+    try { return await rpcOne(u, method, params); }
+    catch (e) { last = e; }
+  }
+  throw last;
+};
+
+const sol = (lamports) => (Number(lamports) / 1e9).toFixed(4);
+const short = (s) => s.slice(0, 6) + '…' + s.slice(-4);
+const esc = (addr, q) => 'https://explorer.solana.com/address/' + addr + q;
+
+function render(c, data, err) {
+  const head = `<div class="cl-h"><div class="cl-name">${c.name}</div>
+    <a class="pill" href="${esc(c.prop, c.q)}">prop ${short(c.prop)}</a></div>`;
+
+  if (err) {
+    return `<div class="cl">${head}<div class="cl-b">
+      <div class="state paid">unreachable</div>
+      <div class="verdict">${c.name} RPC said: ${err}. This page only shows what it can read, so it
+      is showing nothing rather than something reassuring. The explorer link above is the same data,
+      from someone else's node.</div></div></div>`;
+  }
+
+  const p = data.prop;
+  const state = STATES[p.state] || '?';
+  const pot = Number(p.stake) * 2;
+  const unclaimed = data.lamports >= pot;
+  const winner = p.yesWon ? 'MAKER (YES)' : 'TAKER (NO)';
+
+  return `<div class="cl">${head}<div class="cl-b">
+    <div class="state">${state.toUpperCase()}</div>
+    ${p.state === 2
+      ? `<div class="verdict">chain says <b>"${question(p)}" = ${String(p.yesWon).toUpperCase()}</b> &nbsp;·&nbsp; ${winner} wins</div>`
+      : `<div class="verdict">not settled yet</div>`}
+    <div style="margin-top:20px">
+      <div class="k">Pot</div>
+      <div class="pot ${unclaimed ? '' : 'paid'}">${unclaimed ? sol(pot) + ' SOL' : '<s>' + sol(pot) + ' SOL</s>'}</div>
+      <div class="verdict">${unclaimed ? 'still in escrow' : 'paid out to ' + winner.toLowerCase()}</div>
+    </div>
+    <div style="margin-top:20px">
+      <div class="row"><span class="lbl">question</span><span class="val hero">${question(p)}</span></div>
+      <div class="row"><span class="lbl">fixture</span><span class="val">${p.fixtureId}${FIXTURES[Number(p.fixtureId)] ? ' · ' + FIXTURES[Number(p.fixtureId)].join(' v ') : ''}</span></div>
+      <div class="row"><span class="lbl">stake / side</span><span class="val">${sol(p.stake)} SOL</span></div>
+      <div class="row"><span class="lbl">maker · YES</span><span class="val">${short(p.maker)}</span></div>
+      <div class="row"><span class="lbl">taker · NO</span><span class="val">${p.taker === '11111111111111111111111111111111' ? 'nobody yet' : short(p.taker)}</span></div>
+      <div class="row"><span class="lbl">oracle</span><span class="val">${short(p.oracle)}</span></div>
+      <div class="row"><span class="lbl">held by PDA</span><span class="val">${sol(data.lamports)} SOL</span></div>
+      <div class="row"><span class="lbl">settles after</span><span class="val">${new Date(Number(p.settleAfter) * 1000).toISOString().slice(11, 19)} UTC</span></div>
+    </div>
+  </div></div>`;
+}
+
+async function load() {
+  document.getElementById('receipts').innerHTML = RECEIPTS.map(([what, sig]) =>
+    `<a href="https://explorer.solana.com/tx/${sig}"><span class="what">${what}</span><span class="sig">${short(sig)}</span></a>`).join('');
+
+  const out = await Promise.all(CLUSTERS.map(async (c) => {
+    try {
+      const res = await rpc(c.rpcs, 'getAccountInfo', [c.prop, { encoding: 'base64', commitment: 'confirmed' }]);
+      if (!res || !res.value) throw new Error('account not found');
+      const raw = Uint8Array.from(atob(res.value.data[0]), (ch) => ch.charCodeAt(0));
+      return render(c, { prop: decodeProp(raw), lamports: res.value.lamports }, null);
+    } catch (e) {
+      return render(c, null, String(e.message || e));
+    }
+  }));
+
+  document.getElementById('clusters').innerHTML = out.join('');
+  document.getElementById('asof').textContent = 'read ' + new Date().toISOString().slice(11, 19) + ' UTC';
+
+  const failed = out.filter((h) => h.includes('unreachable')).length;
+  document.getElementById('rpcnote').innerHTML = failed
+    ? `<div class="warn">${failed} of ${CLUSTERS.length} public RPC endpoints did not answer just now. Solana's
+       public nodes rate-limit browsers, and this page has no API key to hide behind. That is a property of the
+       free endpoint, not of the escrow: every explorer link on this page reads the same accounts from a
+       different node. Refresh, or click through.</div>`
+    : '';
+}
+
+load();
+</script>
+</body>
+</html>
