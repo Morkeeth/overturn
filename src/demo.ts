@@ -1,7 +1,5 @@
-// The demo: two attacks and one honest settlement, against a real World Cup semi-final.
-//
-// These exercise guards 2 and 3. Guard 1 (fixture binding, lib.rs FixtureMismatch) is not
-// attacked here: it needs a valid proof from a different fixture, and the demo is pinned to one.
+// The demo: three attacks and one honest settlement, against a real World Cup semi-final.
+// One attack per guard, in order. Attack N fires guard N.
 //
 // Prop under test:  "Spain total goals > 2"  (an over-2.5 market)
 // Ground truth:     Spain scored 2. The prop is FALSE. The NO side must win.
@@ -32,11 +30,11 @@ const kc = (s: string) =>
 
 const mapProof = (a: any[]) => a.map((n) => ({ hash: Array.from(n.hash as number[]), isRightSibling: n.isRightSibling }));
 
-async function fetchProof(seq: number) {
-  const r = await fetch(`${API}/api/scores/stat-validation?fixtureId=${FIXTURE}&seq=${seq}&statKeys=${SPAIN_GOALS_KEY}`, {
+async function fetchProof(seq: number, fixtureId: number = FIXTURE) {
+  const r = await fetch(`${API}/api/scores/stat-validation?fixtureId=${fixtureId}&seq=${seq}&statKeys=${SPAIN_GOALS_KEY}`, {
     headers: { Authorization: `Bearer ${kc('WC_JWT')}`, 'X-Api-Token': kc('WC_API_TOKEN') },
   });
-  if (!r.ok) throw new Error(`proof ${seq}: ${r.status}`);
+  if (!r.ok) throw new Error(`proof ${fixtureId}/${seq}: ${r.status}`);
   return r.json() as any;
 }
 
@@ -124,6 +122,15 @@ line('  prop matched. 0.1 SOL in escrow.\n');
 const finalProof = await fetchProof(1026); // batch 21:04:14, period 100, value 2
 const halfProof = await fetchProof(478);   // batch 19:50:07 -> 19:54:36, period 3, value 1
 
+// The other semi-final, England v Argentina, played the next night. Its final proof is real,
+// valid, and shaped exactly like ours: same stat key (2), same period (100), batch running past
+// the final whistle. It clears the finality guard and the predicate guard. The only thing wrong
+// with it is that it is a different match. Strip guard 1 and this proof settles a France v Spain
+// prop using Argentina's scoreline.
+const OTHER_SEMI = 18241006;      // England v Argentina, 2026-07-15
+const OTHER_SEMI_FINAL_SEQ = 962; // game_finalised, 21:14:24 UTC
+const foreignProof = await fetchProof(OTHER_SEMI_FINAL_SEQ, OTHER_SEMI);
+
 const attempt = async (label: string, val: any, threshold: number, expect: 'REJECT' | 'ACCEPT') => {
   const payload = toPayload(val);
   try {
@@ -153,8 +160,9 @@ rule();
 line('  ATTACKS: every one uses a genuine, valid, unforged TxLINE proof');
 rule();
 
-await attempt('ATTACK 1  half-time proof (Spain had 1 goal at HT) to settle early', halfProof, 2, 'REJECT');
-await attempt('ATTACK 2  honest final proof, but asks "Spain > 1" instead of "> 2"', finalProof, 1, 'REJECT');
+await attempt('ATTACK 1  real final proof from the OTHER semi-final (England v Argentina)', foreignProof, 2, 'REJECT');
+await attempt('ATTACK 2  half-time proof (Spain had 1 goal at HT) to settle early', halfProof, 2, 'REJECT');
+await attempt('ATTACK 3  honest final proof, but asks "Spain > 1" instead of "> 2"', finalProof, 1, 'REJECT');
 
 rule();
 line('  HONEST SETTLEMENT: final proof, the question the prop actually asked');
@@ -178,7 +186,9 @@ line(`  chain says: "Spain total goals > 2" = ${String(p.yesWon).toUpperCase()}`
 line(`  winner    : ${winner}`);
 line(`  correct   : ${!p.yesWon ? 'YES, Spain scored 2, the prop was false' : 'NO, something is wrong'}`);
 line('');
-line('  Nothing above trusted the stream. Every rejection and the settlement itself');
-line('  came from a Merkle proof verified on-chain by TxLINE, via CPI.');
+line('  Nothing above trusted the stream. Every proof was genuine, and genuineness was');
+line('  never the question: all three rejections happened BEFORE the oracle was asked.');
+line('  The escrow refused to verify a proof it had no business verifying. Only the');
+line('  settlement reached the CPI, and its verdict came from TxLINE, not from us.');
 line('='.repeat(76));
 process.exit(p.yesWon ? 1 : 0);
