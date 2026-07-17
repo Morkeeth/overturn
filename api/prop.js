@@ -17,7 +17,9 @@ const CLUSTERS = {
   },
   devnet: {
     rpcs: ['https://api.devnet.solana.com'],
-    prop: '38LzLkoyk6xMaFEFJ1jKyWNCLoe6qcUNrtvsQW3j4bUc',
+    // The live sandbox judges can attack from /market. Kept in sync with SANDBOX_PROP in
+    // web/market.html and the devnet card there, so the whole page reads one prop.
+    prop: 'Hx1JiroRenfuTtfNtQZpkP9DbCMzW1XFehdmsogPr85y',
     oracle: '6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J',
     explorer: '?cluster=devnet',
   },
