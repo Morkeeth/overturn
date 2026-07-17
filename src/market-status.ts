@@ -29,9 +29,13 @@ line(`  oracle     : ${p.oracle.toBase58()}`);
 line(`  settles    : not before ${new Date(p.settleAfter.toNumber() * 1000).toISOString().slice(11, 19)} UTC`);
 
 if (state === 'settled') {
+  // The PDA keeps its own rent-exempt minimum forever, so "still holds lamports" does not
+  // mean "still holds the pot". Compare against the pot itself.
+  const pot = p.stake.toNumber() * 2;
+  const unclaimed = held >= pot;
   line('');
   line(`  RESULT     : prop is ${String(p.yesWon).toUpperCase()} -> ${p.yesWon ? 'MAKER (YES)' : 'TAKER (NO)'} wins`);
-  line(`  ${held > 0 ? 'pot is still unclaimed. Run: npm run market:claim' : 'pot has been claimed. Nothing left to collect.'}`);
+  line(`  ${unclaimed ? `pot of ${sol(pot)} SOL is unclaimed. Run: npm run market:claim` : `pot of ${sol(pot)} SOL has been paid out. Only ${sol(held)} SOL of account rent remains.`}`);
 } else if (state === 'open') {
   line('');
   line('  Nobody has taken the other side. Run: npm run market:take');

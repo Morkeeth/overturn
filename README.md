@@ -139,28 +139,45 @@ Open the link.
 It is also insurance: `/api/scores/historical` serves only a two-week window, so this match ages out
 of the API around 28 July, the day before judging.
 
-## Deployed
+## Deployed, on mainnet, with real money
 
-`overturn_escrow` is live on **Solana devnet**. Nothing here asks you to take that on trust.
+`overturn_escrow` is live on **Solana mainnet-beta and devnet, at the same address**. Nothing
+here asks you to take that on trust.
 
 | | |
 |---|---|
-| Program ID | `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv` |
-| Cluster | devnet |
-| Explorer | https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv?cluster=devnet |
-| Deploy tx | `5woQBTBwb8FogJBSqLFD56w1NGAig4kbxDYkD7aYmFsyUANnRJisuBi7xnd7hcFgMuzav3JycUo4LvtUwurbbRW3` |
+| Program ID | `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv` (both clusters) |
+| Mainnet | [explorer](https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv) · `Executable: true` · 207712 bytes |
+| Devnet | [explorer](https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv?cluster=devnet) |
 | Upgrade authority | `9Fw49bq19uVFHHHubNSpdn3ZQGy9nFSaJeLEdDbSDK1s` |
 
-Verify the deployed address is the one the source claims:
+### One real prop, on mainnet, settled by TxODDS' production oracle
+
+0.1 SOL of real money went into escrow on mainnet-beta and came out the correct side, decided
+by a CPI into the **mainnet** `txoracle` (`9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA`) against
+TxLINE's real anchored Merkle roots for France v Spain. Every hash below resolves:
+
+| Step | Mainnet transaction |
+|---|---|
+| deploy | [`63foE5La…`](https://explorer.solana.com/tx/63foE5LabQywmZNzdbzrx4DcdtAQ6ytcDCyEJ7C98EnCJKwSen7okGf5P2EFBUQQSK4nhMddBN8r1w8iW22sxFku) |
+| open (maker takes YES, 0.05 SOL) | [`sf3Sw3mu…`](https://explorer.solana.com/tx/sf3Sw3muaWD11NjFhynEJVtpJ5pkg4wQFDMNtWnwf91c3gSvVdby8wiQA9qNsnUoS6ApvNveSEd414MJNHV1pz4) |
+| take (taker takes NO, 0.05 SOL) | [`hyErrTEz…`](https://explorer.solana.com/tx/hyErrTEz6rbUs3SysGwyu2MRQyZNn4vBavAKQKNUhwHYPUBgsH3FqZzcLQ2oUtWG2pUL8vgfFtN9TLRK4tQ6MLC) |
+| settle (prop = FALSE) | [`3rmG899b…`](https://explorer.solana.com/tx/3rmG899b3surG8YgcgCxdRtEiUoJVkuoeWY6qGzkqfCXFKDbzbuPEg9NZyQtGASGyADNkMxCFbxYRkEJGwR9yC6Z) |
+| claim (NO collects 0.1 SOL) | [`nQJDZG6B…`](https://explorer.solana.com/tx/nQJDZG6BHmwW1Lbd77RZ6P4y3PuX7wvYM8YnVhscUgiRruKGJe3pPwXzzeVCd68EBG6cUPeEpmxJ5QtTFgMGwzB) |
+
+The prop account is [`9bifQAHTDMR5o5nLkdVoCXh3pmKApxkfBbu2QaeB94r9`](https://explorer.solana.com/address/9bifQAHTDMR5o5nLkdVoCXh3pmKApxkfBbu2QaeB94r9).
+Before settling it, we also handed it a real, valid, unforged proof from the **other** semi-final
+(England v Argentina). Mainnet, real money on the table, and it was rejected by guard 1.
+
+### Check that the deployed address is the one the source claims
 
 ```
-solana program show HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv --url devnet
+solana program show HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv --url mainnet-beta
 grep declare_id overturn_escrow/programs/overturn_escrow/src/lib.rs
 ```
 
-Both print `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`, and the on-chain account reports
-`Executable: true` at `207712` bytes. A deploy log proves we published a program. The check above
-proves it is *this* program. That distinction is the whole project.
+Both print `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`. A deploy log proves we published a
+program. The check above proves it is *this* program. That distinction is the whole project.
 
 ## TxLINE endpoints used
 
