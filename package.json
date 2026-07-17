@@ -15,7 +15,9 @@
     "market:settle": "tsx src/market-settle.ts",
     "market:attack": "tsx src/market-settle.ts --attack",
     "market:claim": "tsx src/market-claim.ts",
-    "market:status": "tsx src/market-status.ts"
+    "market:status": "tsx src/market-status.ts",
+    "market:watch": "tsx src/market-watch.ts",
+    "market:fixtures": "tsx src/market-fixtures.ts"
   },
   "keywords": [],
   "author": "",

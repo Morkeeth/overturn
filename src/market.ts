@@ -108,7 +108,12 @@ export const propPdaFor = (makerKey: PublicKey, nonce: InstanceType<typeof BN>, 
 // The step commands are separate processes, so the open command writes down which prop it
 // made and the rest read it. Gitignored: it is local scratch, not state anyone else needs.
 const MARKET_PATH = '.overturn-market.json';
-export type Market = { nonce: string; prop: string; cluster: string; opened: string };
+export type Market = {
+  nonce: string; prop: string; cluster: string; opened: string;
+  // Which question this prop was opened on. The chain is authoritative; these are here so the
+  // step commands and the watcher know what to fetch without asking the user twice.
+  fixtureId?: number; statKey?: number; threshold?: number;
+};
 
 export const saveMarket = (m: Market) => fs.writeFileSync(MARKET_PATH, JSON.stringify(m, null, 2));
 export const loadMarket = (): Market => {
@@ -118,6 +123,44 @@ export const loadMarket = (): Market => {
   }
   return JSON.parse(fs.readFileSync(MARKET_PATH, 'utf8'));
 };
+
+/** Every World Cup fixture TxLINE knows about, soonest first. */
+export async function fixtures() {
+  const r = await txlineGet(`/api/fixtures/snapshot?startEpochDay=20648`);
+  if (!r.ok) throw new Error(`fixtures ${r.status}`);
+  const all = await r.json();
+  return (Array.isArray(all) ? all : [])
+    .filter((f: any) => f.Competition === 'World Cup')
+    .map((f: any) => ({
+      fixtureId: f.FixtureId,
+      home: f.Participant1,
+      away: f.Participant2,
+      startTime: f.StartTime,
+      finished: f.GameState === 3,
+    }))
+    .sort((a: any, b: any) => a.startTime - b.startTime);
+}
+
+export async function fixture(id: number) {
+  const f = (await fixtures()).find((x: any) => x.fixtureId === id);
+  if (!f) throw new Error(`fixture ${id} not found in the TxLINE snapshot`);
+  return f;
+}
+
+/** The full event history for a fixture, newest last. TxLINE serves it as SSE text. */
+export async function history(fixtureId: number) {
+  const r = await txlineGet(`/api/scores/historical/${fixtureId}`);
+  if (!r.ok) throw new Error(`history ${fixtureId}: ${r.status}`);
+  const text = await r.text();
+  return text
+    .split('\n')
+    .filter((l) => l.startsWith('data: '))
+    .map((l) => { try { return JSON.parse(l.slice(6)); } catch { return null; } })
+    .filter(Boolean) as any[];
+}
+
+export const txlineGet = (path: string) =>
+  fetch(`${API}${path}`, { headers: { Authorization: `Bearer ${kc('WC_JWT')}`, 'X-Api-Token': kc('WC_API_TOKEN') } });
 
 export const line = (s = '') => console.log(s);
 export const rule = () => line('-'.repeat(76));
