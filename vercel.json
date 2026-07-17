@@ -3,7 +3,17 @@
   "outputDirectory": "web",
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/market", "destination": "/market.html" },
-    { "source": "/story", "destination": "/story.html" }
+    {
+      "source": "/market",
+      "destination": "/market.html"
+    },
+    {
+      "source": "/story",
+      "destination": "/story.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/about.html"
+    }
   ]
 }

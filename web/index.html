@@ -37,7 +37,15 @@
   .pill:hover{color:var(--ink);border-color:var(--ink)}
   .pill.solid{background:var(--ink);color:var(--base);border-color:var(--ink);font-weight:700}
 
-  header{padding:86px 0 72px}
+  /* The photograph is the subject, not decoration, and it is greyscaled in CSS rather than
+     trusted to be grey. It sits under a heavy gradient so the type never fights it. */
+  header{padding:86px 0 72px;position:relative;overflow:hidden}
+  header .bg{position:absolute;inset:0;z-index:0}
+  header .bg img{width:100%;height:100%;object-fit:cover;object-position:72% 42%;
+                 filter:grayscale(1) contrast(1.2);opacity:.62}
+  header .bg:after{content:"";position:absolute;inset:0;
+                   background:linear-gradient(100deg,var(--base) 26%,rgba(10,10,10,.86) 46%,rgba(10,10,10,.30) 100%)}
+  header .wrap{position:relative;z-index:2}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
            color:var(--dim);margin-bottom:26px}
   h1{font-size:clamp(38px,6.4vw,76px);font-weight:900;letter-spacing:-.035em;line-height:.98}
@@ -88,13 +96,16 @@
 <nav><div class="wrap">
   <div class="mark">Over<s>turn</s></div>
   <div class="navlinks">
+    <a class="pill" href="/about">About</a>
     <a class="pill" href="/story">The 26 seconds</a>
     <a class="pill" href="https://github.com/Morkeeth/overturn">Repo</a>
     <a class="pill solid" href="/market">See it live</a>
   </div>
 </div></nav>
 
-<header><div class="wrap">
+<header>
+  <div class="bg"><img src="/img/ball.jpg" alt=""></div>
+  <div class="wrap">
   <div class="eyebrow">TxODDS x Solana World Cup · Prediction Markets &amp; Settlement</div>
   <!-- The strike belongs on the thing that was overturned. Striking "didn't happen" negates
        the negation and reads as though the goal stood. The goal is the phantom: strike that. -->
@@ -193,6 +204,47 @@
   <div class="cta">
     <a class="pill solid" href="/market">Watch it on chain</a>
     <a class="pill" href="https://github.com/Morkeeth/overturn#or-drive-it-yourself-one-step-at-a-time">Run it yourself</a>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Bring your own key</h2>
+  <p class="sub">This is not a hosted service you have to trust. The program has no admin key and
+  nobody to appeal to, including us. Everything the site does you can do from a terminal against the
+  same program, with your own TxLINE subscription and your own wallet. Point <code style="font-family:var(--mono);font-size:13px;color:var(--ink)">RPC_URL</code>
+  at a cluster and the identical flow runs there: there is no special mainnet path, which is the only
+  reason we were willing to put real money through it.</p>
+  <div class="term">
+    <div class="term-h">your key · your wallet · your machine</div>
+<pre><i># 1. your TxLINE token. one on-chain subscribe, free tier, four weeks</i>
+node subscribe.mjs
+
+<i># 2. your keys. the CLI reads these; the site never sees them</i>
+WC_API_TOKEN=...   <i># from /api/token/activate</i>
+WC_JWT=...         <i># from /auth/guest/start, no credentials needed</i>
+
+<i># 3. your market, on whichever chain you like</i>
+npm run market:fixtures
+RPC_URL=https://api.mainnet-beta.solana.com \
+ORACLE=9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA \
+npm run market:open -- --fixture 18257739 --stat 1 --threshold 1</pre>
+  </div>
+  <div class="term">
+    <div class="term-h">point an agent at it &nbsp;·&nbsp; npm run market:watch</div>
+<pre><i># every command is non-interactive, prints an explorer link, and exits with a status
+# code. the watcher is that taken to its end: it settles the moment the match is
+# actually over, on game_finalised, never on a clock and never on the score looking right.</i>
+
+  <b>10:43:46  game_finalised at 21:04:14  0-2</b>
+  proof     : seq 1026, period 100, value 2
+  <b>OK  SETTLED. "stat 2 > 2" = FALSE</b>   winner: TAKER (NO)
+  <b>OK  PAID. +0.1000 SOL to the NO side</b>
+
+  Nobody decided that. The proof did.</pre>
+  </div>
+  <div class="cta">
+    <a class="pill solid" href="/about">Why this exists</a>
+    <a class="pill" href="https://github.com/Morkeeth/overturn">Read the code</a>
   </div>
 </div></section>
 

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About Overturn: why an escrow should refuse</title>
+<meta name="description" content="Why Overturn exists, what the 26 seconds were, and how to run it yourself with your own key.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* Monochrome, same as everywhere. The photographs are desaturated in CSS rather than
+     trusted to be grey: the palette is a rule, not a hope. */
+  :root{
+    --base:#0A0A0A; --surface:#131313; --raise:#1C1C1C;
+    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
+    --ink:#FFFFFF; --mute:#8C8C8C; --dim:#4E4E4E; --faint:#2E2E2E;
+    --r-pill:40px; --r-card:16px; --r-sm:6px;
+    --display:'Archivo',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--base);color:var(--ink);font-family:var(--display);
+       -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit}
+  .wrap{max-width:820px;margin:0 auto;padding:0 28px}
+  .wide{max-width:1100px}
+  nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(10,10,10,.88);
+      backdrop-filter:blur(8px);z-index:5}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px;max-width:1100px}
+  .mark{font-weight:900;font-size:17px;letter-spacing:-.02em;text-transform:uppercase}
+  .mark s{text-decoration-thickness:2px}
+  .navlinks{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+        border:1px solid var(--line-2);border-radius:var(--r-pill);padding:7px 13px;color:var(--mute);
+        text-decoration:none;white-space:nowrap}
+  .pill:hover{color:var(--ink);border-color:var(--ink)}
+  .pill.solid{background:var(--ink);color:var(--base);border-color:var(--ink);font-weight:700}
+
+  .hero{position:relative;border-bottom:1px solid var(--line);overflow:hidden}
+  .hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+            filter:grayscale(1) contrast(1.1);opacity:.28}
+  .hero:after{content:"";position:absolute;inset:0;
+              background:linear-gradient(180deg,rgba(10,10,10,.35) 0%,rgba(10,10,10,.92) 78%,var(--base) 100%)}
+  .hero .wrap{position:relative;z-index:2;padding:100px 28px 72px;max-width:1100px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+           color:var(--dim);margin-bottom:22px}
+  h1{font-size:clamp(34px,5vw,58px);font-weight:900;letter-spacing:-.03em;line-height:1.02}
+  .lede{margin-top:22px;color:var(--mute);font-size:17px;line-height:1.65;max-width:62ch}
+
+  section{padding:52px 0;border-top:1px solid var(--line)}
+  section:first-of-type{border-top:0}
+  h2{font-size:clamp(19px,2.2vw,24px);font-weight:900;letter-spacing:-.015em;text-transform:uppercase}
+  h3{margin-top:30px;font-size:16px;font-weight:900;letter-spacing:-.01em}
+  p{margin-top:15px;color:var(--mute);font-size:15.5px;line-height:1.72}
+  p b, li b{color:var(--ink);font-weight:700}
+  ul{margin-top:14px;padding-left:18px}
+  li{color:var(--mute);font-size:15.5px;line-height:1.72;margin-top:8px}
+  .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  code{font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--raise);
+       padding:2px 6px;border-radius:var(--r-sm)}
+
+  .quote{margin-top:26px;border-left:2px solid var(--line-2);padding:6px 0 6px 22px}
+  .quote p{margin-top:0;color:var(--ink);font-size:17px;line-height:1.6}
+  .quote .src{margin-top:9px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+
+  .tl{margin-top:26px;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .tl .r{display:grid;grid-template-columns:96px 1fr;gap:18px;padding:15px 20px;
+         border-bottom:1px solid var(--line);font-size:14px}
+  .tl .r:last-child{border-bottom:0}
+  .tl .t{font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .tl .w{color:var(--mute);line-height:1.6}
+  .tl .r.hot{background:var(--surface)}
+  .tl .r.hot .w{color:var(--ink)}
+  .tl .r.gone .w{color:var(--faint)}
+
+  .term{margin-top:22px;background:#060606;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .term-h{padding:12px 18px;border-bottom:1px solid var(--line);font-family:var(--mono);
+          font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .term pre{padding:18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--mute)}
+  .term pre b{color:var(--ink);font-weight:700}
+  .term pre i{color:var(--faint);font-style:normal}
+
+  figure{margin-top:30px;border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  figure img{display:block;width:100%;filter:grayscale(1) contrast(1.05);opacity:.72}
+  figcaption{padding:14px 20px;border-top:1px solid var(--line);font-family:var(--mono);
+             font-size:11px;color:var(--dim);line-height:1.7}
+  footer{padding:52px 0 72px;border-top:1px solid var(--line);color:var(--dim);
+         font-family:var(--mono);font-size:11px;line-height:1.9}
+  footer a{color:var(--mute)}
+  @media(max-width:720px){
+    nav .wrap{height:auto;padding-top:12px;padding-bottom:12px;flex-direction:column;align-items:flex-start}
+    .tl .r{grid-template-columns:1fr;gap:4px}
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <div class="mark">Over<s>turn</s></div>
+  <div class="navlinks">
+    <a class="pill" href="/">Home</a>
+    <a class="pill" href="/story">The 26 seconds</a>
+    <a class="pill" href="https://github.com/Morkeeth/overturn">Repo</a>
+    <a class="pill solid" href="/market">See it live</a>
+  </div>
+</div></nav>
+
+<div class="hero">
+  <img src="/img/ball.jpg" alt="">
+  <div class="wrap">
+    <div class="eyebrow">About</div>
+    <h1>Everyone building on live sports data is one retraction away from paying the wrong person.</h1>
+    <p class="lede">Overturn is a prop-bet escrow on Solana that refuses to settle on a result that
+    is still provisional, still under review, or has since been withdrawn. It exists because of 26
+    seconds on 14 July 2026, and because the fix for those 26 seconds is not more cryptography.</p>
+  </div>
+</div>
+
+<section><div class="wrap">
+  <h2>What happened</h2>
+  <p>France v Spain, World Cup semi-final. At <b>20:22:29</b> TxLINE's feed published Spain's third
+  goal. It was flagged unconfirmed, which almost nobody reads. The scoreline moved to 0-3. VAR opened
+  a review, closed it, and at <b>20:22:55</b> the goal was discarded. The score went back to 0-2 and
+  stayed there to the final whistle at 21:04:14.</p>
+  <p>The phantom goal existed, in public, in the data, for <b>26 seconds</b>.</p>
+  <div class="tl">
+    <div class="r"><span class="t">20:21:18</span><span class="w">Goal confirmed. Spain 2. This one was real.</span></div>
+    <div class="r hot"><span class="t">20:22:29</span><span class="w">Goal published, <b>unconfirmed</b>. The feed now says 0-3.</span></div>
+    <div class="r hot"><span class="t">20:22:41</span><span class="w">VAR review opened. The 0-3 is still standing.</span></div>
+    <div class="r hot"><span class="t">20:22:53</span><span class="w">VAR review closed.</span></div>
+    <div class="r gone"><span class="t">20:22:55</span><span class="w">Action discarded. The third goal never happened. Back to 0-2.</span></div>
+    <div class="r"><span class="t">21:04:14</span><span class="w">Game finalised. Spain 2. It was always 2.</span></div>
+  </div>
+  <p>A market that settled anywhere in that window paid the YES side on a goal that did not exist.
+  It would have released the pot <b>41 minutes and 45 seconds</b> before the match was over, and the
+  chain does not have an undo button. There is no support desk. There is no chargeback.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Why a proof does not save you</h2>
+  <p>TxLINE anchors every score to Solana as a Merkle proof. This is genuinely good, and it is the
+  reason this project is possible at all: anyone can verify what the feed said and when, permissionlessly,
+  without asking TxODDS for anything.</p>
+  <p>But run the thought all the way through. A Merkle proof of the 0-3 scoreline is a <b>perfectly
+  valid proof</b>. It verifies. The signature is real, the root is anchored, the maths is honest. What
+  it proves is that <b>TxODDS published 0-3</b>. It does not prove Spain scored.</p>
+  <div class="quote">
+    <p>A proof shows they published it, not that it happened.</p>
+    <div class="src">the entire thesis, in one line</div>
+  </div>
+  <p>This is the part that surprised us, and it is why the project is not called Verify. Verifying the
+  cryptography and settling on the result are two different jobs, and only one of them is hard. Every
+  on-chain oracle we looked at can prove publication. TxLINE's schema is the only one we found that can
+  also express <b>this record was revised</b>, because it carries an as-of time distinct from
+  publication time and a supersession link between records. Without those two fields, a feed cannot
+  tell you it was wrong. It can only tell you what it said.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>So the escrow refuses</h2>
+  <p>Settling is <b>permissionless</b>: anyone can call it, including a bot, including your opponent,
+  including a stranger. That is safe precisely because the caller has no discretion. They hand over a
+  proof; the guards and the oracle decide. Every input is checked against state frozen when the market
+  opened, before anyone knew the answer.</p>
+  <p>All three guards run <b>before</b> the oracle is ever asked. The escrow refuses to verify a proof
+  it has no business verifying, which is a cheaper and more honest failure than verifying the wrong
+  thing correctly.</p>
+  <ul>
+    <li><b>Guard 1, fixture binding.</b> A real, valid, unforged proof from a different match is still
+    a real proof. We tested this with the other semi-final's final proof: same stat key, same period,
+    batch running past the whistle. It clears guards 2 and 3. It settles nothing here.</li>
+    <li><b>Guard 2, finality.</b> An honest half-time proof honestly proves the half-time score, and
+    would settle a full-match market early and wrongly.</li>
+    <li><b>Guard 3, predicate binding.</b> Without it the settler picks the question, and picks the one
+    they win.</li>
+  </ul>
+  <figure>
+    <img src="/img/lattice.jpg" alt="A lattice of nodes and edges suspended in the dark">
+    <figcaption>A Merkle proof is a path through a lattice like this: each node hashed into its parent,
+    up to one root anchored on Solana. It will tell you the path is intact. It will not tell you the
+    match is over.</figcaption>
+  </figure>
+</div></section>
+
+<section><div class="wrap">
+  <h2>Bring your own key</h2>
+  <p>Nothing here is a hosted service you have to trust. The program is on mainnet and devnet at the
+  same address, it has no admin key, and there is nobody to appeal to, including us. Everything the
+  website does, you can do from a terminal against the same program with <b>your own</b> TxLINE
+  subscription and <b>your own</b> wallet.</p>
+
+  <h3>1. Your TxLINE key</h3>
+  <p>TxLINE's free tier is gated by an API token you activate with an on-chain subscribe transaction
+  (service level 12, four weeks, free). The repo has <code>subscribe.mjs</code> for exactly this. The
+  guest JWT that pairs with it is minted with <code>POST /auth/guest/start</code> and needs no
+  credentials. Put both in your environment and the CLI picks them up.</p>
+  <div class="term">
+    <div class="term-h">your key, your quota, your machine</div>
+<pre><i># one on-chain subscribe, then the token is yours</i>
+node subscribe.mjs
+
+<i># the CLI reads these from the macOS Keychain, or set them however you like</i>
+WC_API_TOKEN=...   <i># from /api/token/activate</i>
+WC_JWT=...         <i># from /auth/guest/start, 30 days</i></pre>
+  </div>
+
+  <h3>2. Your wallet</h3>
+  <p>The maker and taker are ordinary Solana keypairs. Point <code>RPC_URL</code> at whichever cluster
+  you want and the identical flow runs there. There is no special mainnet code path, which is the only
+  reason we trust it on mainnet.</p>
+  <div class="term">
+    <div class="term-h">the whole product, six commands</div>
+<pre>npm run market:fixtures   <i># what TxLINE knows about, live</i>
+npm run market:open       <i># you take YES. the question freezes here</i>
+npm run market:take       <i># someone takes NO. the pot is now unspendable by hand</i>
+npm run market:status     <i># read the prop off the chain. no wallet, no signature</i>
+npm run market:settle     <i># hand it a proof. the oracle decides, not you</i>
+npm run market:claim      <i># the winner collects</i>
+
+<i># same flow, mainnet, no code change</i>
+RPC_URL=https://api.mainnet-beta.solana.com \
+ORACLE=9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA \
+npm run market:open</pre>
+  </div>
+
+  <h3>3. Your agent</h3>
+  <p>Every command is non-interactive, prints an explorer link, and exits with a status code, which
+  makes the whole thing scriptable by something that is not a human. <code>market:watch</code> is that
+  idea taken to its end: it follows the live feed and settles the moment the match is actually over.</p>
+  <p>It settles on <code>game_finalised</code>, never on a clock and never on the scoreline looking
+  right. That is the thesis pointed back at our own tooling. An agent that trusts the feed is the
+  thing this project exists to argue against.</p>
+  <div class="term">
+    <div class="term-h">npm run market:watch &nbsp;·&nbsp; copied from the terminal, nobody in the loop</div>
+<pre>  WATCHING · devnet
+  prop      : 9HpKTmFoG9J4Yr3hTtBiynq92hx95BFYd8f5idxvCZDh
+  question  : stat 2 &gt; 2, period 100 (full time)
+  state     : MATCHED
+  poll      : every 5s until game_finalised
+
+  <b>10:43:46  game_finalised at 21:04:14  0-2</b>
+
+  ----------------------------------------------------------------
+  FULL TIME. Settling from the proof.
+  ----------------------------------------------------------------
+  proof     : seq 1026, period 100, value 2
+  <b>OK  SETTLED. "stat 2 &gt; 2" = FALSE</b>
+      winner: TAKER (NO)
+
+  <b>OK  PAID. +0.1000 SOL to the NO side</b>
+
+  Nobody decided that. The proof did.</pre>
+  </div>
+  <p class="k" style="margin-top:14px">that is a real transcript against the deployed program. it found
+  the whistle, pulled the period-100 proof, settled and paid, with no human in the loop.</p>
+</div></section>
+
+<section><div class="wrap">
+  <h2>What it is not</h2>
+  <p>It settles one prop shape: a single stat, at a single period, against a threshold. There is no
+  order book, no AMM, no liquidity, no fee. It is deliberately one honest primitive rather than a
+  product surface with a broken middle.</p>
+  <p>It also cannot save you from a feed that is simply wrong and never says so. Nothing can. What it
+  can do is refuse to act while the feed is still deciding, which is the failure that actually happened,
+  on camera, to a real semi-final, for 26 seconds.</p>
+  <div class="quote">
+    <p>The escrow's most important feature is the payout it does not make.</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap wide">
+  Program <a href="https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv">HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv</a>, mainnet-beta and devnet, same address.<br>
+  Photographs by Joshua Hoehne and Brad on Unsplash, desaturated to the palette.<br>
+  Built for the TxODDS x Solana World Cup Hackathon · Prediction Markets &amp; Settlement.
+</div></footer>
+
+</body>
+</html>
