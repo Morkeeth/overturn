@@ -4,8 +4,11 @@
 
 TxODDS x Solana World Cup Hackathon · Prediction Markets & Settlement track
 
-**Live page:** https://morkeeth.github.io/overturn/ (no wallet, no install)
-**Program:** [`HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`](https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv?cluster=devnet) on Solana devnet
+**Live app:** https://overturn-morkeeths-projects.vercel.app (no wallet, no install)
+· [the market, live on chain](https://overturn-morkeeths-projects.vercel.app/market)
+· [the 26 seconds](https://overturn-morkeeths-projects.vercel.app/story)
+
+**Program:** [`HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`](https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv), live on **mainnet-beta** and devnet at the same address, holding a real settled prop.
 
 ---
 
@@ -129,12 +132,25 @@ to verify a proof it has no business verifying. Only the settlement asks TxLINE 
 
 ## Judges: no wallet needed
 
-**Live page: https://morkeeth.github.io/overturn/**
+**https://overturn-morkeeths-projects.vercel.app**
 
-TxLINE's free tier requires an on-chain subscribe transaction, so reproducing this from scratch would
-otherwise cost you a wallet and a subscription. It doesn't. The page is **self-contained**: the data
-was fetched once with our subscription and frozen into it. No server, no key, no wallet, no install.
-Open the link.
+| Page | What it is |
+|---|---|
+| [`/`](https://overturn-morkeeths-projects.vercel.app) | the pitch, the three guards, and the real CLI output |
+| [`/market`](https://overturn-morkeeths-projects.vercel.app/market) | the escrow as the chain has it right now, both clusters, plus the live TxLINE feed |
+| [`/story`](https://overturn-morkeeths-projects.vercel.app/story) | the 26 seconds, replayed from the frozen capture |
+
+Nothing asks you for a wallet. `/market` reads Solana and TxLINE and shows you what it found; the
+API routes do the reading server-side, because TxLINE's token is a subscription credential and
+putting it in a page would hand our quota to whoever viewed source.
+
+`/story` is **self-contained**: its data was fetched once with our subscription and frozen into the
+page, so it keeps working after `/api/scores/historical` ages this match out of its two-week window
+around 28 July, the day before judging.
+
+There is a static mirror at https://morkeeth.github.io/overturn with no backend. The chain panels
+still work there (they read Solana directly); the live-feed panel says it needs a backend rather
+than pretending otherwise.
 
 It is also insurance: `/api/scores/historical` serves only a two-week window, so this match ages out
 of the API around 28 July, the day before judging.
