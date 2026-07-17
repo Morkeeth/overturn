@@ -166,8 +166,9 @@
 
 <nav><div class="wrap">
   <div class="mark">Over<s>turn</s></div>
-  <div style="display:flex;gap:8px">
-    <div class="chip">Solana · devnet</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a class="chip" href="./dashboard.html" style="text-decoration:none">Live on chain</a>
+    <div class="chip">Solana · mainnet + devnet</div>
     <div class="chip">No wallet required</div>
   </div>
 </div></nav>
@@ -336,7 +337,9 @@ $('chain').innerHTML = D.onchain.verdicts.map(v => `
   <div class="q"><span class="qt">${v.question}</span><span class="qa ${v.answer ? 't' : 'f'}">${String(v.answer).toUpperCase()}</span></div>`).join('');
 
 $('meta').innerHTML = [
-  `oracle ${D.onchain.devnetOracle.slice(0,10)}…`,
+  // The verdicts above come from verify.ts, which asks the MAINNET oracle. Label the one
+  // that actually answered, not the devnet twin.
+  `mainnet oracle ${D.onchain.mainnetOracle.slice(0,10)}…`,
   `scores root ${D.onchain.scoresRoot.slice(0,10)}…`,
   `epoch day ${D.onchain.epochDay}`,
   `anchoring lag ${D.onchain.anchoringLagMinutes} min`,
