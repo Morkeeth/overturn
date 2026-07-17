@@ -9,95 +9,24 @@
 // verifying the proof is necessary and nowhere near sufficient.
 
 import anchor from '@coral-xyz/anchor';
-import { Connection, Keypair, PublicKey, ComputeBudgetProgram, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import bs58 from 'bs58';
-import { execFileSync } from 'node:child_process';
-import fs from 'node:fs';
+import { ComputeBudgetProgram, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import {
+  connect, maker as makerKeypair, taker as takerKeypair, propPdaFor,
+  ORACLE, STAKE, FIXTURE, FINAL_WHISTLE, SPAIN_GOALS_KEY, FULL_TIME_PERIOD,
+  fetchProof, toPayload, strategyFor, dailyScoresPda, line, rule,
+} from './market.js';
 
 const { BN } = anchor;
 
-const RPC = process.env.RPC_URL ?? 'https://api.devnet.solana.com';
-const ORACLE = new PublicKey(process.env.ORACLE ?? '6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J'); // devnet txoracle
-const API = 'https://txline.txodds.com';
-
-const FIXTURE = 18237038;          // France v Spain, semi-final, 2026-07-14
-const FINAL_WHISTLE = 1784063054;  // game_finalised, 21:04:14 UTC (unix seconds)
-const SPAIN_GOALS_KEY = 2;
-const FULL_TIME_PERIOD = 100;
-
-const kc = (s: string) =>
-  execFileSync('security', ['find-generic-password', '-a', 'worldcup-agent', '-s', s, '-w'], { encoding: 'utf8' }).trim();
-
-const mapProof = (a: any[]) => a.map((n) => ({ hash: Array.from(n.hash as number[]), isRightSibling: n.isRightSibling }));
-
-async function fetchProof(seq: number, fixtureId: number = FIXTURE) {
-  const r = await fetch(`${API}/api/scores/stat-validation?fixtureId=${fixtureId}&seq=${seq}&statKeys=${SPAIN_GOALS_KEY}`, {
-    headers: { Authorization: `Bearer ${kc('WC_JWT')}`, 'X-Api-Token': kc('WC_API_TOKEN') },
-  });
-  if (!r.ok) throw new Error(`proof ${fixtureId}/${seq}: ${r.status}`);
-  return r.json() as any;
-}
-
-const toPayload = (val: any) => ({
-  ts: new BN(val.summary.updateStats.minTimestamp),
-  fixtureSummary: {
-    fixtureId: new BN(val.summary.fixtureId),
-    updateStats: {
-      updateCount: val.summary.updateStats.updateCount,
-      minTimestamp: new BN(val.summary.updateStats.minTimestamp),
-      maxTimestamp: new BN(val.summary.updateStats.maxTimestamp),
-    },
-    eventsSubTreeRoot: Array.from(val.summary.eventStatsSubTreeRoot as number[]),
-  },
-  fixtureProof: mapProof(val.subTreeProof),
-  mainTreeProof: mapProof(val.mainTreeProof),
-  eventStatRoot: Array.from(val.eventStatRoot as number[]),
-  stats: val.statsToProve.map((stat: any, i: number) => ({ stat, statProof: mapProof(val.statProofs[i]) })),
-});
-
-const strategyFor = (threshold: number) => ({
-  geometricTargets: [],
-  distancePredicate: null,
-  discretePredicates: [{ single: { index: 0, predicate: { threshold, comparison: { greaterThan: {} } } } }],
-});
-
-const dailyScoresPda = (val: any, programId: PublicKey) =>
-  PublicKey.findProgramAddressSync(
-    [Buffer.from('daily_scores_roots'), new BN(Math.floor(val.summary.updateStats.minTimestamp / 86_400_000)).toBuffer('le', 2)],
-    programId,
-  )[0];
-
-// ---------------------------------------------------------------------------
-
-const maker = Keypair.fromSecretKey(bs58.decode(kc('WC_WALLET_SECRET'))); // YES side
-// The NO side, persisted to disk. It used to be Keypair.generate(). On devnet that is
-// free money and nobody notices; on mainnet the taker WINS this prop (Spain scored 2, so
-// the prop is false), and claim() requires the winner's signature. An ephemeral taker
-// would take the private key to the pot to its grave, every run.
-const TAKER_PATH = 'taker-keypair.json';
-const taker = fs.existsSync(TAKER_PATH)
-  ? Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(TAKER_PATH, 'utf8'))))
-  : (() => {
-      const kp = Keypair.generate();
-      fs.writeFileSync(TAKER_PATH, JSON.stringify(Array.from(kp.secretKey)), { mode: 0o600 });
-      return kp;
-    })();
-const conn = new Connection(RPC, 'confirmed');
-const provider = new anchor.AnchorProvider(conn, new anchor.Wallet(maker), { commitment: 'confirmed' });
-anchor.setProvider(provider);
-
-const idl = JSON.parse(fs.readFileSync('./overturn_escrow/target/idl/overturn_escrow.json', 'utf8'));
-const program = new anchor.Program(idl, provider);
+// Same wiring the step commands use (src/market.ts). The maker is the YES side and lives
+// in the Keychain; the taker is the NO side and is persisted, because it wins this prop and
+// claim() needs its signature.
+const maker = makerKeypair();
+const taker = takerKeypair();
+const { conn, program } = connect(maker);
 
 const nonce = new BN(Date.now());
-const [propPda] = PublicKey.findProgramAddressSync(
-  [Buffer.from('prop'), maker.publicKey.toBuffer(), nonce.toArrayLike(Buffer, 'le', 8)],
-  program.programId,
-);
-
-const STAKE = new BN(0.05 * LAMPORTS_PER_SOL);
-const line = (s = '') => console.log(s);
-const rule = () => line('-'.repeat(76));
+const propPda = propPdaFor(maker.publicKey, nonce, program.programId);
 
 line('='.repeat(76));
 line('  OVERTURN ESCROW · France v Spain, World Cup semi-final, 2026-07-14');
