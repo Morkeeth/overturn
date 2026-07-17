@@ -74,17 +74,19 @@ npm install
 
 npm run replay   # the Jul-14 semi through a naive settler and the guarded gate
 npm run verify   # ask TxLINE's real mainnet oracle whether the phantom goal happened
-npm run demo     # the escrow: two attacks with genuine proofs, one honest settlement
+npm run demo     # the escrow: three attacks with genuine proofs, one honest settlement
 ```
 
 `replay` needs nothing. `verify` and `demo` need a TxLINE subscription (see below).
 
-Demo output:
+Demo output, against the live devnet program. One attack per guard, attack N fires guard N:
 
 ```
-ATTACK 1  half-time proof (Spain had 1 goal at HT) to settle early
+ATTACK 1  real final proof from the OTHER semi-final (England v Argentina)
+     -> REJECTED: GUARD 1: proof is for a different fixture
+ATTACK 2  half-time proof (Spain had 1 goal at HT) to settle early
      -> REJECTED: GUARD 2: proof batch does not cover the end of the match
-ATTACK 2  honest final proof, but asks "Spain > 1" instead of "> 2"
+ATTACK 3  honest final proof, but asks "Spain > 1" instead of "> 2"
      -> REJECTED: GUARD 3: submitted strategy does not match the predicate this prop was created with
 SETTLE    final proof (period 100), predicate "Spain > 2"
      -> SETTLED
@@ -92,6 +94,14 @@ SETTLE    final proof (period 100), predicate "Spain > 2"
 chain says: "Spain total goals > 2" = FALSE
 winner    : TAKER (NO)      correct: Spain scored 2, the prop was false
 ```
+
+Attack 1 is the one worth pausing on. That proof is real, unforged, and shaped exactly like the one
+that settles: same stat key, same period, batch running past the final whistle. It clears guards 2
+and 3. It is rejected only because England v Argentina is not this match. Delete guard 1 and it
+settles a France v Spain prop on Argentina's scoreline.
+
+None of the three rejections reach the oracle. The guards run before the CPI, so the escrow refuses
+to verify a proof it has no business verifying. Only the settlement asks TxLINE anything.
 
 ## Judges: no wallet needed
 
