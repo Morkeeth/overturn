@@ -4,6 +4,10 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/play",
+      "destination": "/play.html"
+    },
+    {
       "source": "/market",
       "destination": "/market.html"
     },

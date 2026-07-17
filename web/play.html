@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overturn: bet on the World Cup, settled by proof</title>
+<meta name="description" content="Take a side on real upcoming World Cup matches. Your wallet, a peer on the other side, settled trustlessly by a TxLINE Merkle proof. No bookmaker.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --base:#0A0A0A; --surface:#131313; --raise:#1C1C1C;
+    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.16);
+    --ink:#FFFFFF; --mute:#8C8C8C; --dim:#4E4E4E; --faint:#2E2E2E;
+    --r-pill:40px; --r-card:16px; --r-sm:6px;
+    --display:'Archivo',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--base);color:var(--ink);font-family:var(--display);
+       -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 28px}
+  nav{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(10,10,10,.88);
+      backdrop-filter:blur(8px);z-index:5}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+  .mark{font-weight:900;font-size:17px;letter-spacing:-.02em;text-transform:uppercase;text-decoration:none}
+  .mark s{text-decoration-thickness:2px}
+  .navlinks{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+        border:1px solid var(--line-2);border-radius:var(--r-pill);padding:7px 13px;color:var(--mute);
+        text-decoration:none;white-space:nowrap;background:none;cursor:pointer}
+  .pill:hover{color:var(--ink);border-color:var(--ink)}
+  .pill.here{color:var(--ink);border-color:var(--ink)}
+  .pill.solid{background:var(--ink);color:var(--base);border-color:var(--ink);font-weight:700}
+
+  header{padding:70px 0 40px}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+           color:var(--dim);margin-bottom:22px}
+  h1{font-size:clamp(34px,5.4vw,64px);font-weight:900;letter-spacing:-.035em;line-height:1}
+  .lede{margin-top:22px;color:var(--mute);font-size:16px;line-height:1.65;max-width:64ch}
+
+  .walletbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:30px;
+             font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .walletbar .who{word-break:break-all}
+
+  section{padding:20px 0 60px}
+  .board{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:10px}
+  .slip{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);
+        display:flex;flex-direction:column;overflow:hidden}
+  .slip-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+            padding:18px 22px;border-bottom:1px solid var(--line)}
+  .fixture{font-weight:900;font-size:18px;letter-spacing:-.01em}
+  .ko{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-align:right}
+  .ko b{color:var(--ink);font-weight:700}
+  .slip-body{padding:22px;flex:1}
+  .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .bet{font-weight:900;font-size:clamp(20px,2.4vw,26px);letter-spacing:-.02em;margin-top:8px;line-height:1.1}
+  .odds{display:flex;gap:24px;margin-top:18px;font-family:var(--mono);font-size:13px}
+  .odds .n{font-weight:700;font-size:18px;color:var(--ink)}
+  .odds .l{color:var(--dim);font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-top:3px}
+  .against{margin-top:16px;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.6}
+  .slip-foot{padding:16px 22px;border-top:1px solid var(--line)}
+  .take{width:100%;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+        font-weight:700;border:1px solid var(--ink);background:var(--ink);color:var(--base);
+        border-radius:var(--r-pill);padding:13px;cursor:pointer}
+  .take:hover{opacity:.86}
+  .take:disabled{opacity:.4;cursor:not-allowed}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+       text-align:center;padding:6px}
+  .tag.live{color:var(--ink)}
+  .slipmsg{margin:0 22px 16px;background:#060606;border:1px solid var(--line);border-radius:var(--r-sm);
+           padding:12px 14px;font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--mute);
+           white-space:pre-wrap;word-break:break-word;display:none}
+  .slipmsg.on{display:block}
+  .slipmsg b{color:var(--ink)} .slipmsg a{color:var(--ink)}
+
+  .how{margin-top:44px;border-top:1px solid var(--line);padding-top:40px}
+  h2{font-size:clamp(18px,2vw,22px);font-weight:900;letter-spacing:-.01em;text-transform:uppercase}
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px}
+  .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:20px}
+  .step .n{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .step h3{margin-top:10px;font-size:15px;font-weight:900}
+  .step p{margin-top:8px;color:var(--mute);font-size:13px;line-height:1.55}
+  .disclaimer{margin-top:30px;font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.7;max-width:80ch}
+  footer{padding:50px 0 70px;border-top:1px solid var(--line);color:var(--dim);
+         font-family:var(--mono);font-size:11px;line-height:1.9}
+  footer a{color:var(--mute)}
+  @media(max-width:820px){
+    .board,.steps{grid-template-columns:1fr}
+    .steps{grid-template-columns:1fr 1fr}
+    nav .wrap{height:auto;padding-top:12px;padding-bottom:12px;flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="mark" href="/">Over<s>turn</s></a>
+  <div class="navlinks">
+    <a class="pill here" href="/play">Bet</a>
+    <a class="pill" href="/market">Market</a>
+    <a class="pill" href="/about">About</a>
+    <a class="pill" href="/story">Story</a>
+    <button class="pill" id="wbtn" onclick="connect()">Connect wallet</button>
+  </div>
+</div></nav>
+
+<header><div class="wrap">
+  <div class="eyebrow">Live markets · Solana devnet · your wallet, no bookmaker</div>
+  <h1>Bet on the World Cup. Settled by a proof, not a bookmaker.</h1>
+  <p class="lede">Real markets on real upcoming matches. Someone has staked one side; you take the
+  other with your own wallet. When the match ends, anyone can settle it from a TxLINE Merkle proof and
+  the winner collects. No house, no admin key, nobody who can refuse to pay. It runs on devnet, so a
+  bet costs you nothing but a signature.</p>
+  <div class="walletbar" id="walletbar">reading the board…</div>
+</div></header>
+
+<section><div class="wrap">
+  <div class="board" id="board"></div>
+
+  <div class="how">
+    <h2>How a bet works</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1 · Take</div><h3>Pick a side</h3><p>Someone staked YES. You take the other side and match their stake. The pot is now locked on-chain.</p></div>
+      <div class="step"><div class="n">2 · Play</div><h3>The match happens</h3><p>Nobody can touch the money. Not us, not you, not the person on the other side.</p></div>
+      <div class="step"><div class="n">3 · Prove</div><h3>Settle from a proof</h3><p>At full time, anyone hands the escrow a TxLINE Merkle proof. It settles only on that, never on the stream.</p></div>
+      <div class="step"><div class="n">4 · Collect</div><h3>The winner is paid</h3><p>The correct side claims the pot. On a goal that was later overturned, this escrow refuses. That is the point.</p></div>
+    </div>
+    <p class="disclaimer">Devnet only. These are demonstration markets with play-money SOL, opened to
+    show the settlement engine end to end on fixtures that have not been played yet. The same program is
+    live on mainnet at the same address; putting real money on an open internet market is a different
+    decision than we make for a hackathon.</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  Program <a href="https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv?cluster=devnet">HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv</a> on devnet · settled by CPI into TxLINE's txoracle.<br>
+  <a href="/market">See a settled market</a> · <a href="/about">Why this exists</a>
+</div></footer>
+
+<script>
+let wallet = null;
+const provider = () =>
+  window.phantom?.solana?.isPhantom ? window.phantom.solana
+  : window.solana?.isPhantom ? window.solana
+  : window.solflare?.isSolflare ? window.solflare : null;
+
+function walletLabel() {
+  const b = document.getElementById('walletbar');
+  const btn = document.getElementById('wbtn');
+  if (wallet) {
+    b.innerHTML = `connected <b style="color:var(--ink)">${wallet}</b> · make sure you are on devnet`;
+    btn.textContent = wallet.slice(0, 4) + '…' + wallet.slice(-4);
+  } else {
+    b.innerHTML = 'not connected · connect a Solana wallet (Phantom / Solflare) set to <b style="color:var(--mute)">devnet</b> to place a bet';
+  }
+}
+
+async function connect() {
+  const p = provider();
+  if (!p) { document.getElementById('walletbar').innerHTML = 'No Solana wallet found. Install Phantom or Solflare, set it to devnet.'; return; }
+  try { const r = await p.connect(); wallet = (r.publicKey ?? p.publicKey).toString(); walletLabel(); renderBoard(); }
+  catch (e) { document.getElementById('walletbar').textContent = 'Wallet refused: ' + (e.message || e); }
+}
+window.connect = connect;
+
+const RPC = 'https://api.devnet.solana.com';
+async function rpc(method, params) {
+  const r = await fetch(RPC, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
+  const j = await r.json(); if (j.error) throw new Error(j.error.message); return j.result;
+}
+async function confirmSig(sig) {
+  for (let i = 0; i < 30; i++) {
+    try { const r = await rpc('getSignatureStatuses', [[sig], { searchTransactionHistory: true }]);
+      const st = r?.value?.[0];
+      if (st && (st.confirmationStatus === 'confirmed' || st.confirmationStatus === 'finalized')) return st;
+    } catch {}
+    await new Promise((r) => setTimeout(r, 1200));
+  }
+  return { timeout: true };
+}
+async function legacyTx(raw) {
+  if (!window.__web3) {
+    await new Promise((ok, no) => { const s = document.createElement('script');
+      s.src = 'https://unpkg.com/@solana/web3.js@1.98.4/lib/index.iife.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+    window.__web3 = window.solanaWeb3;
+  }
+  return window.__web3.Transaction.from(raw);
+}
+
+let MARKETS = [];
+async function loadBoard() {
+  try {
+    const r = await fetch('/api/markets');
+    const j = await r.json();
+    MARKETS = j.markets || [];
+  } catch { MARKETS = []; }
+  renderBoard();
+}
+
+function countdown(ms) {
+  const d = ms - Date.now();
+  if (d <= 0) return 'kicked off';
+  const h = Math.floor(d / 3600000), m = Math.floor((d % 3600000) / 60000);
+  return h > 24 ? `${Math.floor(h / 24)}d ${h % 24}h` : `${h}h ${m}m`;
+}
+
+function renderBoard() {
+  const el = document.getElementById('board');
+  if (!MARKETS.length) { el.innerHTML = '<div class="tag">The board needs the backend to read live markets. Static mirror has none attached.</div>'; return; }
+  el.innerHTML = MARKETS.map((m, i) => {
+    const open = m.state === 'Open';
+    const foot = open
+      ? (wallet
+          ? `<button class="take" onclick="take(${i})">Back it · stake ${m.stakeSol} SOL</button>`
+          : `<button class="take" onclick="connect()">Connect wallet to bet</button>`)
+      : `<div class="tag live">Matched · both sides staked · waiting for kickoff</div>`;
+    return `<div class="slip" id="slip${i}">
+      <div class="slip-top">
+        <div class="fixture">${m.home} v ${m.away}</div>
+        <div class="ko">kickoff<br><b>${countdown(m.kickoff)}</b></div>
+      </div>
+      <div class="slip-body">
+        <div class="k">Your bet</div>
+        <div class="bet">${m.takerBet}</div>
+        <div class="odds">
+          <div><div class="n">${m.stakeSol}</div><div class="l">you stake</div></div>
+          <div><div class="n">${m.potSol}</div><div class="l">you win</div></div>
+          <div><div class="n">2×</div><div class="l">even money</div></div>
+        </div>
+        <div class="against">Against someone holding "${m.yes}". Settled from a TxLINE proof at full time.</div>
+      </div>
+      <div class="slipmsg" id="msg${i}"></div>
+      <div class="slip-foot">${foot}</div>
+    </div>`;
+  }).join('');
+}
+
+function msg(i, html) { const el = document.getElementById('msg' + i); el.classList.add('on'); el.innerHTML = html; }
+
+async function take(i) {
+  const m = MARKETS[i];
+  const p = provider();
+  if (!p || !wallet) return connect();
+  msg(i, `Building your bet…\nYou will sign it. Your key never leaves your wallet.`);
+  try {
+    const r = await fetch(`/api/tx?action=take&prop=${m.prop}&signer=${wallet}`);
+    const j = await r.json();
+    if (j.error) return msg(i, `Could not build it: ${j.error}`);
+    msg(i, `Sign it in your wallet to back "<b>${m.takerBet}</b>"…`);
+    const raw = Uint8Array.from(atob(j.tx), (c) => c.charCodeAt(0));
+    const { signature } = await p.signAndSendTransaction(await legacyTx(raw));
+    msg(i, `Sent <b>${signature.slice(0, 16)}…</b>\nConfirming on devnet…`);
+    const st = await confirmSig(signature);
+    if (st.err) { msg(i, `The chain rejected it: ${JSON.stringify(st.err)}. Someone may have taken this market first.`); }
+    else {
+      msg(i, `<b>You're in.</b> 0.10 SOL locked, and it can only open on a proof.\nIf "${m.takerBet}" comes true, you win the pot.\n\n<a href="https://explorer.solana.com/tx/${signature}?cluster=devnet">See your bet on the explorer</a>`);
+      setTimeout(loadBoard, 1800);
+    }
+  } catch (e) {
+    const s = String(e.message || e);
+    msg(i, s.includes('User rejected') ? 'You rejected it in the wallet. No bet placed.' : `Failed: ${s}`);
+  }
+}
+window.take = take;
+
+walletLabel();
+loadBoard();
+</script>
+</body>
+</html>
