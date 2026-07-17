@@ -106,6 +106,29 @@ flow runs on mainnet:
 RPC_URL=https://api.mainnet-beta.solana.com ORACLE=9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA npm run market:open
 ```
 
+### On a match that hasn't been played yet
+
+Everything above settles a match whose result is already known, which makes it a replay. Point
+it at a fixture that has not kicked off and it is a market:
+
+```bash
+npm run market:fixtures                                    # what TxLINE knows about, live
+npm run market:open -- --fixture 18257739 --stat 1 --threshold 1
+npm run market:take
+npm run market:watch                                       # follow the feed, settle at full time
+```
+
+`market:watch` settles on `game_finalised`, never on a clock and never on the scoreline looking
+right. That is the thesis pointed at our own tooling: the feed asserting a score is not the match
+being over.
+
+**On `settle_after` when the whistle is unknown.** It is a unix timestamp, and for an unplayed
+match it is derived as kickoff + 105 minutes. That is safe even if the match runs to extra time,
+because it is not the only finality check. The prop binds to stat **period 100** (full time), and
+TxLINE only ever emits a period-100 stat once the match is finalised: in-play batches come back as
+period 3 and 4. So a proof taken during extra time cannot settle the prop no matter what the clock
+says, and a real full-time proof always carries a batch that runs past kickoff + 105.
+
 Demo output, against the live devnet program. One attack per guard, attack N fires guard N:
 
 ```
