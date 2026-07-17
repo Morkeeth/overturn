@@ -160,17 +160,19 @@
     header{padding:56px 0 48px}
     section{padding:56px 0}
   }
+  .mark{text-decoration:none}
+  .pill.here{color:var(--ink);border-color:var(--ink)}
 </style>
 </head>
 <body>
 
 <nav><div class="wrap">
-  <div class="mark">Over<s>turn</s></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <a class="chip" href="/about" style="text-decoration:none">About</a>
-    <a class="chip" href="/market" style="text-decoration:none">Live on chain</a>
-    <div class="chip">Solana · mainnet + devnet</div>
-    <div class="chip">No wallet required</div>
+  <a class="mark" href="/">Over<s>turn</s></a>
+  <div class="navlinks">
+    <a class="pill" href="/market">Market</a>
+    <a class="pill" href="/about">About</a>
+    <a class="pill here" href="/story">Story</a>
+    <a class="pill" href="https://github.com/Morkeeth/overturn">Repo</a>
   </div>
 </div></nav>
 
