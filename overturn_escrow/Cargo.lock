@@ -1869,7 +1869,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "phantom_escrow"
+name = "overturn_escrow"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
