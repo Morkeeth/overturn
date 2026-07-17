@@ -89,6 +89,25 @@
   .matrix tr.own .feed{font-size:15px}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:36px;background:var(--line);
        border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  /* The position. A slip, not a KPI card: the money is stated once, the losing
+     side is faded rather than coloured, per the palette note above. */
+  .slip{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);overflow:hidden}
+  .slip-h{display:flex;justify-content:space-between;align-items:flex-start;gap:28px;padding:30px 32px;border-bottom:1px solid var(--line)}
+  .slip-q{font-weight:900;font-size:clamp(22px,3vw,31px);letter-spacing:-.02em;margin-top:9px;line-height:1.1}
+  .slip-m{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-top:10px}
+  .slip-amt{font-family:var(--mono);font-weight:700;font-size:clamp(30px,4.4vw,44px);letter-spacing:-.03em;margin-top:7px;white-space:nowrap;line-height:1}
+  .slip-amt i{font-style:normal;font-size:13px;color:var(--dim);margin-left:5px}
+  .sides{display:grid;grid-template-columns:1fr 1fr}
+  .side{padding:24px 32px;display:flex;align-items:baseline;gap:14px}
+  .side+.side{border-left:1px solid var(--line)}
+  .side .sd{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.16em}
+  .side .sv{font-family:var(--mono);font-weight:700;font-size:19px}
+  .side .sw{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .side.lost{color:var(--faint)}
+  .side.lost .sw{color:var(--faint)}
+  .slip-f{display:flex;justify-content:space-between;align-items:baseline;gap:18px;padding:20px 32px;border-top:1px solid var(--line);
+          font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+  .slip-f b{color:var(--ink);font-weight:700}
   .card{background:var(--base);padding:32px}
   .card.bad{background:var(--surface)}
   .card .k{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
@@ -127,7 +146,10 @@
 
   @media(max-width:820px){
     .wrap{padding:0 18px}
-    .two,.three{grid-template-columns:1fr}
+    .two,.three,.sides{grid-template-columns:1fr}
+    .slip-h{flex-direction:column;gap:20px}
+    .side+.side{border-left:0;border-top:1px solid var(--line)}
+    .slip-f{flex-direction:column;gap:8px}
     /* Stack: time on its own line, then the event, then the score. The tags must wrap
        rather than push the row past the viewport. */
     .tl .r{grid-template-columns:1fr;row-gap:7px;padding:16px 16px}
@@ -163,6 +185,12 @@
     <div class="nowlbl" id="b-nowlbl"></div>
   </div>
 </div></header>
+
+<section><div class="wrap">
+  <h2>The position</h2>
+  <p class="sub">Two people disagree about one number and lock the stake in an escrow. Nobody can pay it out by hand: the only way it opens is a Merkle proof the chain accepts. Everything below this is what happened to this money.</p>
+  <div id="ticket" style="margin-top:26px"></div>
+</div></section>
 
 <section><div class="wrap">
   <h2>The 26 seconds</h2>
@@ -399,6 +427,15 @@ const D = {
     "franceGoals": 0,
     "propTrue": false
   },
+  "ticket": {
+    "perSide": 0.05,
+    "escrow": 0.1,
+    "unit": "SOL",
+    "yes": "maker",
+    "no": "taker",
+    "winner": "NO",
+    "earlyBySeconds": 2505
+  },
   "onchain": {
     "mainnetOracle": "9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA",
     "devnetOracle": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J",
@@ -531,11 +568,39 @@ $('tl').innerHTML = D.timeline.map(e => {
        + `<span class="s">${e.france}–${e.spain}</span></div>`;
 }).join('');
 
+const T = D.ticket;
+$('ticket').innerHTML = `
+  <div class="slip">
+    <div class="slip-h">
+      <div>
+        <div class="k">The question</div>
+        <div class="slip-q">${D.prop.label}</div>
+        <div class="slip-m">${D.prop.market} · ${D.fixture.name} · ${D.fixture.date}</div>
+      </div>
+      <div>
+        <div class="k">In escrow</div>
+        <div class="slip-amt">${T.escrow.toFixed(2)}<i>${T.unit}</i></div>
+      </div>
+    </div>
+    <div class="sides">
+      <div class="side${T.winner === 'YES' ? '' : ' lost'}">
+        <span class="sd">YES</span><span class="sv">${T.perSide} ${T.unit}</span><span class="sw">${T.yes}</span>
+      </div>
+      <div class="side${T.winner === 'NO' ? '' : ' lost'}">
+        <span class="sd">NO</span><span class="sv">${T.perSide} ${T.unit}</span><span class="sw">${T.no}</span>
+      </div>
+    </div>
+    <div class="slip-f">
+      <span>Settled ${D.truth.finalisedAt} on a Merkle proof, verified on-chain</span>
+      <span><b>${T.winner} takes ${T.escrow.toFixed(2)} ${T.unit}</b> · Spain scored ${D.truth.spainGoals}</span>
+    </div>
+  </div>`;
+
 $('engines').innerHTML = `
   <div class="card bad">
     <div class="k">Settled from the stream</div>
     <div class="v"><s>Paid out</s></div>
-    <p>Released the pot on the provisional goal. ${D.phantom.durationSeconds} seconds later VAR erased it. The money is gone and the chain will not give it back.</p>
+    <p>Released the ${D.ticket.escrow.toFixed(2)} ${D.ticket.unit} to YES on the provisional goal, ${Math.floor(D.ticket.earlyBySeconds / 60)} minutes ${D.ticket.earlyBySeconds % 60} seconds before the final whistle. ${D.phantom.durationSeconds} seconds later VAR erased the goal. The money is gone and the chain will not give it back.</p>
     <div class="when">${D.naive.time} · ${D.naive.state}</div>
   </div>
   <div class="card good">

@@ -85,6 +85,18 @@ const out = {
     franceGoals: readStat(final.Score, 'Participant1', 'Goals'),
     propTrue: evaluate(PROP, final.Score),
   },
+  // The position itself. These are the real stakes the escrow settled on devnet
+  // (STAKE in src/demo.ts is 0.05 SOL a side); earlyBySeconds is derived, not typed:
+  // how long before the final whistle the stream-following market paid the wrong side.
+  ticket: {
+    perSide: 0.05,
+    escrow: 0.1,
+    unit: 'SOL',
+    yes: 'maker',
+    no: 'taker',
+    winner: evaluate(PROP, final.Score) ? 'YES' : 'NO',
+    earlyBySeconds: naive ? Math.round((final.Ts - naive.ts) / 1000) : null,
+  },
   // Verified against the real programs on 2026-07-15. See src/verify.ts to reproduce.
   onchain: {
     mainnetOracle: '9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA',

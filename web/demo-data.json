@@ -196,6 +196,15 @@
     "franceGoals": 0,
     "propTrue": false
   },
+  "ticket": {
+    "perSide": 0.05,
+    "escrow": 0.1,
+    "unit": "SOL",
+    "yes": "maker",
+    "no": "taker",
+    "winner": "NO",
+    "earlyBySeconds": 2505
+  },
   "onchain": {
     "mainnetOracle": "9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA",
     "devnetOracle": "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J",
