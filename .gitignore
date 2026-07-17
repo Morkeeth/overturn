@@ -10,8 +10,8 @@ dist/
 deployer-keypair.json
 
 # rust/anchor build output
-phantom_escrow/target/
-phantom_escrow/.anchor/
+overturn_escrow/target/
+overturn_escrow/.anchor/
 
 .DS_Store
 
