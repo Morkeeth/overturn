@@ -70,7 +70,18 @@ const dailyScoresPda = (val: any, programId: PublicKey) =>
 // ---------------------------------------------------------------------------
 
 const maker = Keypair.fromSecretKey(bs58.decode(kc('WC_WALLET_SECRET'))); // YES side
-const taker = Keypair.generate();                                        // NO side
+// The NO side, persisted to disk. It used to be Keypair.generate(). On devnet that is
+// free money and nobody notices; on mainnet the taker WINS this prop (Spain scored 2, so
+// the prop is false), and claim() requires the winner's signature. An ephemeral taker
+// would take the private key to the pot to its grave, every run.
+const TAKER_PATH = 'taker-keypair.json';
+const taker = fs.existsSync(TAKER_PATH)
+  ? Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(TAKER_PATH, 'utf8'))))
+  : (() => {
+      const kp = Keypair.generate();
+      fs.writeFileSync(TAKER_PATH, JSON.stringify(Array.from(kp.secretKey)), { mode: 0o600 });
+      return kp;
+    })();
 const conn = new Connection(RPC, 'confirmed');
 const provider = new anchor.AnchorProvider(conn, new anchor.Wallet(maker), { commitment: 'confirmed' });
 anchor.setProvider(provider);
@@ -185,6 +196,29 @@ const winner = p.yesWon ? 'MAKER (YES)' : 'TAKER (NO)';
 line(`  chain says: "Spain total goals > 2" = ${String(p.yesWon).toUpperCase()}`);
 line(`  winner    : ${winner}`);
 line(`  correct   : ${!p.yesWon ? 'YES, Spain scored 2, the prop was false' : 'NO, something is wrong'}`);
+line('');
+
+// Settling only records who won. claim() is what actually moves the money, and it wants
+// the winner's signature. Run it: a settlement nobody can collect is not a settlement.
+rule();
+line('  PAYOUT: the winner collects. This is the money actually moving.');
+rule();
+const winnerKp = p.yesWon ? maker : taker;
+const before = await conn.getBalance(winnerKp.publicKey);
+try {
+  const sig = await program.methods
+    .claim()
+    .accounts({ winner: winnerKp.publicKey, prop: propPda })
+    .signers([winnerKp])
+    .rpc();
+  const after = await conn.getBalance(winnerKp.publicKey);
+  const delta = (after - before) / LAMPORTS_PER_SOL;
+  line(`  OK   CLAIM     ${winner} collected the pot`);
+  line(`       -> +${delta.toFixed(4)} SOL to ${winnerKp.publicKey.toBase58()}`);
+  line(`       -> ${sig}`);
+} catch (e: any) {
+  line(`  FAIL CLAIM     ${String(e?.error?.errorMessage ?? e?.message ?? e).split('\n')[0].slice(0, 100)}`);
+}
 line('');
 line('  Nothing above trusted the stream. Every proof was genuine, and genuineness was');
 line('  never the question: all three rejections happened BEFORE the oracle was asked.');
