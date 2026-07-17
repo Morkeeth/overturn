@@ -20,3 +20,6 @@ overturn_escrow/.anchor/
 # load-bearing: TxLINE's /api/scores/historical only serves a two-week window, so this match ages
 # out of the API around 28 Jul — the day before judging on the 29th. Without it committed, nobody
 # (including the judges) can reproduce the replay. It ships.
+
+# local scratch: which prop the step commands are pointed at
+.overturn-market.json

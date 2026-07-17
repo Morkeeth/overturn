@@ -9,7 +9,13 @@
     "demo": "tsx src/demo.ts",
     "live": "tsx src/live.ts",
     "subscribe": "node subscribe.mjs",
-    "build:web": "tsx src/export-demo.ts && tsx src/build-web.ts"
+    "build:web": "tsx src/export-demo.ts && tsx src/build-web.ts",
+    "market:open": "tsx src/market-open.ts",
+    "market:take": "tsx src/market-take.ts",
+    "market:settle": "tsx src/market-settle.ts",
+    "market:attack": "tsx src/market-settle.ts --attack",
+    "market:claim": "tsx src/market-claim.ts",
+    "market:status": "tsx src/market-status.ts"
   },
   "keywords": [],
   "author": "",
