@@ -8,10 +8,16 @@
 // live, so a label can never drift from what the chain actually holds.
 
 export const BOARD = [
-  '7MBPXFrSRSCpgCkBF6BnnFPzdAifyeRxMY9FjkY7zpUK',
-  '6GZYsCDFNpi27rJx6VPMbFq467z86KWP23yutwM9ud94',
-  'FUxBj8qs6YX9efCZtqvjP2wyeDH1T7UFqE2sTQ7U5rPk',
-  'HUHWtQsSuMy7MV2v3gzh9znDDpJwLAhyuFYNTxbf1crN',
+  // The Spain v Argentina final (Sun) first: the biggest match, a mix of lines.
+  'MQyVX77jPXQRCfHnpTfeMAXhtou3YK2TqD65VkKTMQ6', // Spain > 1  -> back: Spain score 1 or fewer
+  '7MBPXFrSRSCpgCkBF6BnnFPzdAifyeRxMY9FjkY7zpUK', // Argentina > 1 -> back: Argentina score 1 or fewer
+  'A9pGPykmsM18oeoFo7y1o6CTJX3X1jyW3qDGYM4uXdGY', // Spain > 2 -> back: Spain score 2 or fewer (the favourite)
+  '6GZYsCDFNpi27rJx6VPMbFq467z86KWP23yutwM9ud94', // Spain > 0 -> back: Spain fail to score (the longshot)
+  // France v England (Sat).
+  '4d84rM1mv5tVjk28JSVjZz8HjyCoWvXpwefDLrf27wAy', // France > 1 -> back: France score 1 or fewer
+  '9yHVpBHyQicpeFzxJeqCyX3mB37NJeDaKCuLj5HjR2oy', // England > 0 -> back: England fail to score
+  'FUxBj8qs6YX9efCZtqvjP2wyeDH1T7UFqE2sTQ7U5rPk', // France > 0 -> back: France fail to score
+  'HUHWtQsSuMy7MV2v3gzh9znDDpJwLAhyuFYNTxbf1crN', // England > 1 -> back: England score 1 or fewer (already matched)
 ];
 
 export const DEVNET_RPCS = ['https://api.devnet.solana.com', 'https://solana-rpc.publicnode.com'];
