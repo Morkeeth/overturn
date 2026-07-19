@@ -55,15 +55,16 @@ line('='.repeat(76));
 const nonce = new BN(Date.now());
 const propPda = propPdaFor(maker.publicKey, nonce, program.programId);
 
-await conn.confirmTransaction(
-  await conn.requestAirdrop(taker.publicKey, 0.05 * LAMPORTS_PER_SOL).catch(async () => {
-    const tx = new anchor.web3.Transaction().add(
-      SystemProgram.transfer({ fromPubkey: maker.publicKey, toPubkey: taker.publicKey, lamports: Math.floor(FUND_TAKER * LAMPORTS_PER_SOL) }),
-    );
-    return anchor.web3.sendAndConfirmTransaction(conn, tx, [maker]);
-  }),
-  'confirmed',
-);
+// Fund the taker from the maker only if it can't cover its stake. Devnet airdrops are
+// rate-limited to uselessness, so we top up directly — no airdrop, no 429 retry spam on screen.
+const takerNeeds = STAKE_SM.toNumber() + Math.floor(0.002 * LAMPORTS_PER_SOL);
+const takerBal = await conn.getBalance(taker.publicKey);
+if (takerBal < takerNeeds) {
+  const fund = new anchor.web3.Transaction().add(
+    SystemProgram.transfer({ fromPubkey: maker.publicKey, toPubkey: taker.publicKey, lamports: takerNeeds - takerBal }),
+  );
+  await anchor.web3.sendAndConfirmTransaction(conn, fund, [maker]);
+}
 
 await program.methods
   .createProp(nonce, new BN(FIXTURE), SPAIN_GOALS_KEY, FULL_TIME_PERIOD, 2, { greaterThan: {} }, STAKE_SM, new BN(FINAL_WHISTLE))
