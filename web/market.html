@@ -147,9 +147,11 @@
 
 <section id="demo"><div class="wrap">
   <h2>Watch it settle — no wallet, no install</h2>
-  <p class="sub">The whole point, one step at a time: a real proof from the <b>wrong match</b>
-  refused, the honest proof <b>settled</b>, the right side <b>paid</b>. The terminal is a replay —
-  the chain is not. Every hash it prints is a live mainnet transaction you can open on the explorer.</p>
+  <p class="sub"><b>Overturn is the settlement layer, not a betting app</b> — it decides, from an
+  on-chain proof, who a sports market pays, and refuses to pay on a goal that didn't happen. Watch
+  the whole thing, one step at a time: a real proof from the <b>wrong match</b> refused, the honest
+  proof <b>settled</b>, the right side <b>paid</b>. The terminal is a replay — the chain is not; every
+  hash it prints is a live mainnet transaction you can open.</p>
   <div class="term-wrap">
     <div class="term-bar">overturn · mainnet-beta</div>
     <div class="term" id="term"><span class="term-idle">▶ press run to replay the real settlement</span></div>
@@ -179,6 +181,10 @@
   <p class="sub">We supply the proof, because that needs our TxLINE subscription. You supply the
   signature, because that needs your wallet. We never see your key and cannot move your money. It costs
   a devnet transaction fee, which is nothing, and it will fail, which is the point.</p>
+  <p class="sub" style="font-family:var(--mono);font-size:12px;color:var(--dim)">
+    Needs a wallet (Phantom / Solflare) set to <b style="color:var(--mute)">devnet</b>, with a little
+    devnet SOL for the fee — <a href="https://faucet.solana.com" target="_blank" rel="noopener" style="color:var(--mute);text-decoration:underline;text-underline-offset:3px">get some free here</a>.
+    No wallet, or on mainnet? The no-wallet replay at the top of the page needs neither.</p>
   <div class="try" id="try"></div>
 </div></section>
 
