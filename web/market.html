@@ -532,6 +532,7 @@ async function send(action) {
     const raw = Uint8Array.from(atob(j.tx), (c) => c.charCodeAt(0));
     const { signature } = await p.signAndSendTransaction(
       window.solanaWeb3Tx ? window.solanaWeb3Tx(raw) : await legacyTx(raw),
+      { skipPreflight: true, maxRetries: 3 }, // the attack is meant to fail; don't let the wallet block it at simulation
     );
 
     out(`Sent <b>${signature}</b>\nWaiting for the cluster…`);
