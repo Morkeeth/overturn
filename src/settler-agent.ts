@@ -93,20 +93,14 @@ rule();
 const admitted: any[] = [];
 for (let i = 0; i < inbox.length; i++) {
   const { val, note } = inbox[i];
-  const claim = txoddsClaim(val, note);
-  const result = firewall(claim, FROZEN);
-
-  line(`\n  [${i + 1}] inbox proof · ${note}`);
-  line(`      source=${claim.source} subject=${claim.subjectId} stat=${claim.statKey}/${claim.period}`);
-  for (const v of result.verdicts) {
-    line(`      ${v.pass ? 'pass' : 'STOP'}  ${v.guard.padEnd(30)} ${v.detail}`);
-  }
-  if (result.admit) {
-    line(`      => ADMIT. This proof answers the exact question the market froze.`);
-    admitted.push({ val, note });
-  } else {
-    line(`      => REFUSE (${result.refusedBy}). The agent will not spend gas on a proof the chain would reject.`);
-  }
+  const result = firewall(txoddsClaim(val, note), FROZEN);
+  const guards = result.verdicts.map((v, g) => `G${g + 1} ${v.pass ? 'pass' : 'STOP'}`).join('  ');
+  const decision = result.admit
+    ? 'ADMIT  ->  answers the exact frozen question'
+    : `REFUSE  ->  ${result.refusedBy}`;
+  line(`\n  [${i + 1}] ${note}`);
+  line(`      ${guards}    ${decision}`);
+  if (result.admit) admitted.push({ val, note });
 }
 
 line('');
