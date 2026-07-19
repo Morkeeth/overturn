@@ -11,6 +11,9 @@ TxODDS x Solana World Cup Hackathon · Prediction Markets & Settlement track
 · [the market, live on chain](https://overturn-morkeeths-projects.vercel.app/market)
 · [the 26 seconds](https://overturn-morkeeths-projects.vercel.app/story)
 
+**Reviewing this repo (human or LLM)?** Start with **[`AGENTS.md`](AGENTS.md)** — it orients you in one
+pass and every claim is verifiable. **Try it live:** [▶ Play a live market](https://overturn-morkeeths-projects.vercel.app/market#demo) — a real market, start to finish, no wallet.
+
 **Program:** [`HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`](https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv), live on **mainnet-beta** and devnet at the same address, holding a real settled prop.
 
 ---
@@ -107,6 +110,7 @@ guards are provider-agnostic by construction. Today there is one adapter, live o
 ```bash
 npm install
 
+npm run play     # ONE real market end-to-end on devnet: create → match → settle by proof → pay
 npm run replay   # the Jul-14 semi through a naive settler and the guarded gate
 npm run verify   # ask TxLINE's real mainnet oracle whether the phantom goal happened
 npm run demo     # the escrow: three attacks with genuine proofs, one honest settlement

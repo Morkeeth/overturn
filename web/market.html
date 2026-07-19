@@ -301,46 +301,6 @@ const RECEIPTS = [
   ['claim · NO collects the 0.10 SOL pot', 'nQJDZG6BHmwW1Lbd77RZ6P4y3PuX7wvYM8YnVhscUgiRruKGJe3pPwXzzeVCd68EBG6cUPeEpmxJ5QtTFgMGwzB'],
 ];
 
-// ---------------------------------------------------------------------------
-// The guided terminal. A no-wallet replay of the real mainnet run so a judge can watch the
-// escrow refuse the wrong proof and pay the right side, then click any hash to verify it.
-// The signatures come straight from RECEIPTS above, so this can never drift from the receipts.
-// ---------------------------------------------------------------------------
-const [, DEMO_OPEN, DEMO_TAKE, DEMO_SETTLE, DEMO_CLAIM] = RECEIPTS.map((r) => r[1]);
-const txLink = (sig, label) => `<a href="https://explorer.solana.com/tx/${sig}" target="_blank" rel="noopener">${label} ↗</a>`;
-
-const DEMO_BEATS = [
-  `<span class="muted"># a real prop, matched on mainnet — nobody can move the pot by hand</span>`,
-  `<span class="cmd">$ overturn status</span>`,
-  `  MATCHED · "Spain total goals &gt; 2" · fixture 18237038, France v Spain\n  0.10 SOL locked · ${txLink(DEMO_OPEN, 'open')}  ${txLink(DEMO_TAKE, 'take')}`,
-  `<span class="cmd">$ overturn attack</span>   <span class="muted"># a real, valid proof — from the OTHER semi-final</span>`,
-  `  <span class="ok">REJECTED · GUARD 1</span> — proof is for a different fixture\n  the escrow refused it <b>before it ever asked the oracle</b>. nothing moved.`,
-  `<span class="cmd">$ overturn settle</span>   <span class="muted"># the real full-time proof; the oracle decides, not the caller</span>`,
-  `  <span class="ok">SETTLED</span> · "Spain total goals &gt; 2" = <span class="ok">FALSE</span> · ${txLink(DEMO_SETTLE, 'settle')}`,
-  `<span class="cmd">$ overturn claim</span>`,
-  `  <span class="ok">+0.1000 SOL</span> to the NO side — no admin, no appeal · ${txLink(DEMO_CLAIM, 'claim')}`,
-  `<span class="muted"># every hash above is a live mainnet transaction. don't take our word for it — open one.</span>`,
-];
-
-let demoRunning = false;
-async function runDemo() {
-  if (demoRunning) return;
-  demoRunning = true;
-  const term = document.getElementById('term');
-  const btn = document.getElementById('runbtn');
-  btn.disabled = true; btn.textContent = 'running…';
-  term.innerHTML = '';
-  for (const beat of DEMO_BEATS) {
-    const div = document.createElement('div');
-    div.innerHTML = beat;
-    term.appendChild(div);
-    term.scrollTop = term.scrollHeight;
-    await new Promise((r) => setTimeout(r, 460));
-  }
-  btn.disabled = false; btn.textContent = '▶ Run it again';
-  demoRunning = false;
-}
-window.runDemo = runDemo;
 
 // Live play: drive a real devnet market through the four steps via /api/play, streaming each.
 let playRunning = false;
