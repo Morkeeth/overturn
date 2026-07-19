@@ -19,7 +19,8 @@
     "market:claim": "tsx src/market-claim.ts",
     "market:status": "tsx src/market-status.ts",
     "market:watch": "tsx src/market-watch.ts",
-    "market:fixtures": "tsx src/market-fixtures.ts"
+    "market:fixtures": "tsx src/market-fixtures.ts",
+    "play": "tsx src/play.ts"
   },
   "keywords": [],
   "author": "",

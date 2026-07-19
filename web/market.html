@@ -146,18 +146,18 @@
 </div></header>
 
 <section id="demo"><div class="wrap">
-  <h2>Watch it settle — no wallet, no install</h2>
-  <p class="sub"><b>Overturn is the settlement layer, not a betting app</b> — it decides, from an
-  on-chain proof, who a sports market pays, and refuses to pay on a goal that didn't happen. Watch
-  the whole thing, one step at a time: a real proof from the <b>wrong match</b> refused, the honest
-  proof <b>settled</b>, the right side <b>paid</b>. The terminal is a replay — the chain is not; every
-  hash it prints is a live mainnet transaction you can open.</p>
+  <h2>Play a live market — no wallet, no install</h2>
+  <p class="sub">Click once and the app runs a <b>real market end to end</b> on Solana devnet —
+  created, matched, <b>settled by proof</b>, paid — with real transactions and no wallet. This is the
+  whole product in about ten seconds: a market that pays out only from a proof, and refuses to pay on
+  a goal that didn't happen. Every line lands on a live explorer link. <span class="muted">(Devnet, so
+  the SOL is free; the same program runs on mainnet — receipts below.)</span></p>
   <div class="term-wrap">
-    <div class="term-bar">overturn · mainnet-beta</div>
-    <div class="term" id="term"><span class="term-idle">▶ press run to replay the real settlement</span></div>
+    <div class="term-bar">overturn · devnet · live</div>
+    <div class="term" id="term"><span class="term-idle">▶ play a real market, start to finish</span></div>
     <div class="btns">
-      <button class="btn" id="runbtn" onclick="runDemo()">▶ Run the settlement</button>
-      <a class="btn ghost" href="#try">Or sign it yourself with a wallet ↓</a>
+      <button class="btn" id="runbtn" onclick="runPlay()">▶ Play a live market</button>
+      <a class="btn ghost" href="#try">Or sign one yourself with a wallet ↓</a>
     </div>
   </div>
 </div></section>
@@ -313,6 +313,36 @@ async function runDemo() {
   demoRunning = false;
 }
 window.runDemo = runDemo;
+
+// Live play: drive a real devnet market through the four steps via /api/play, streaming each.
+let playRunning = false;
+async function runPlay() {
+  if (playRunning) return;
+  playRunning = true;
+  const term = document.getElementById('term');
+  const btn = document.getElementById('runbtn');
+  btn.disabled = true; btn.textContent = 'running a live market…';
+  term.innerHTML = '';
+  const say = (html) => { const d = document.createElement('div'); d.innerHTML = html; term.appendChild(d); term.scrollTop = term.scrollHeight; return d; };
+  const txlink = (sig) => `<a href="https://explorer.solana.com/tx/${sig}?cluster=devnet" target="_blank" rel="noopener">view ↗</a>`;
+  const STEPS = ['create', 'take', 'settle', 'claim'];
+  let prop;
+  try {
+    for (let i = 0; i < STEPS.length; i++) {
+      const pending = say(`<span class="muted">[${i + 1}/4] working…</span>`);
+      const url = STEPS[i] === 'create' ? '/api/play?step=create' : `/api/play?step=${STEPS[i]}&prop=${prop}`;
+      const j = await (await fetch(url)).json();
+      pending.remove();
+      if (j.error) { say(`<span class="ok">stopped:</span> ${j.error}`); throw new Error(j.error); }
+      if (j.prop) prop = j.prop;
+      say(`<span class="cmd">[${i + 1}/4]</span> ${j.label}   ${j.sig ? txlink(j.sig) : ''}`);
+    }
+    say(`<span class="muted"># a full market: created → matched → settled by proof → paid. real devnet txs, no wallet.</span>`);
+  } catch { /* line already shown */ }
+  btn.disabled = false; btn.textContent = '▶ Play another';
+  playRunning = false;
+}
+window.runPlay = runPlay;
 
 /** Prop, as laid out in lib.rs, after Anchor's 8-byte discriminator. */
 function decodeProp(buf) {
