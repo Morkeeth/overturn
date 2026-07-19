@@ -264,6 +264,9 @@ Offered as genuine feedback, not complaint. The data layer is good; the docs are
 
 ## Architecture
 
+**Diagrams (rendered): [`ARCHITECTURE.md`](ARCHITECTURE.md)** — the guarded settle path, the prop
+lifecycle, and the whole thesis on one page.
+
 ```
 TxLINE SSE stream ──> gate.ts (state machine) ──> UI only. Never money.
                                                    PENDING -> PROVISIONAL -> RETRACTED
