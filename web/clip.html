@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overturn — settled by proof</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#fff; --mute:#8C8C8C; --dim:#4E4E4E; --line:rgba(255,255,255,.10);
+    --display:'Archivo',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#000;color:var(--ink);font-family:var(--display);-webkit-font-smoothing:antialiased;
+    display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .stage{width:min(920px,92vw);padding:6vh 0}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);text-align:center;margin-bottom:34px}
+  .eyebrow b{color:var(--mute)}
+  .feed{min-height:46vh;display:flex;flex-direction:column;justify-content:center;gap:16px}
+  .beat{opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease}
+  .beat.in{opacity:1;transform:none}
+  .beat .n{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--dim)}
+  .beat .big{font-weight:900;letter-spacing:-.03em;line-height:1.02;font-size:clamp(30px,6vw,64px);margin-top:4px}
+  .beat .sub{font-family:var(--mono);font-size:clamp(12px,1.5vw,15px);color:var(--mute);margin-top:8px;word-break:break-word}
+  .beat .sub a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+  .verdict .big{color:var(--ink)}
+  .paid .big{color:var(--ink)}
+  .kicker{text-align:center;margin-top:40px;font-family:var(--mono);font-size:clamp(13px,1.7vw,17px);color:var(--mute);opacity:0;transition:opacity .6s ease}
+  .kicker.in{opacity:1}
+  .kicker b{color:var(--ink)}
+  .cta{position:fixed;left:0;right:0;bottom:6vh;display:flex;justify-content:center}
+  .btn{font-family:var(--mono);font-size:13px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;
+    background:var(--ink);color:#000;border:none;border-radius:40px;padding:15px 30px;cursor:pointer}
+  .btn:hover{opacity:.88}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .mark{position:fixed;top:24px;left:28px;font-weight:900;font-size:15px;letter-spacing:-.02em;text-transform:uppercase}
+  .mark s{text-decoration-thickness:2px}
+  .url{position:fixed;top:26px;right:28px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--dim)}
+  @media(max-width:640px){ .cta{bottom:4vh} .mark,.url{display:none} }
+</style>
+</head>
+<body>
+<div class="mark">Over<s>turn</s></div>
+<div class="url">overturn-morkeeths-projects.vercel.app</div>
+
+<div class="stage">
+  <div class="eyebrow">A real prop-bet market · <b>settled by proof, not by an admin</b> · live on Solana</div>
+  <div class="feed" id="feed">
+    <div class="beat in"><div class="big" style="color:var(--mute)">A market that can't pay out<br>on a goal that didn't happen.</div></div>
+  </div>
+  <div class="kicker" id="kicker"></div>
+</div>
+
+<div class="cta"><button class="btn" id="btn" onclick="play()">▶ Settle a live market</button></div>
+
+<script>
+const feed = document.getElementById('feed');
+const kicker = document.getElementById('kicker');
+const btn = document.getElementById('btn');
+const tx = (s) => `<a href="https://explorer.solana.com/tx/${s}?cluster=devnet" target="_blank" rel="noopener">on-chain ↗</a>`;
+const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+function beat(cls, n, big, sub) {
+  const d = document.createElement('div');
+  d.className = 'beat ' + (cls || '');
+  d.innerHTML = `<div class="n">${n}</div><div class="big">${big}</div>${sub ? `<div class="sub">${sub}</div>` : ''}`;
+  feed.appendChild(d);
+  requestAnimationFrame(() => d.classList.add('in'));
+  feed.scrollTop = feed.scrollHeight;
+  return d;
+}
+
+let running = false;
+async function play() {
+  if (running) return; running = true;
+  btn.disabled = true; btn.textContent = 'settling a live market…';
+  feed.innerHTML = ''; kicker.classList.remove('in'); kicker.textContent = '';
+  const steps = ['create', 'take', 'settle', 'claim'];
+  const label = { create: 'MARKET OPEN', take: 'MATCHED', settle: 'SETTLED · BY PROOF', claim: 'PAID' };
+  let prop;
+  try {
+    for (let i = 0; i < steps.length; i++) {
+      const url = steps[i] === 'create' ? '/api/play?step=create' : `/api/play?step=${steps[i]}&prop=${prop}`;
+      const j = await (await fetch(url)).json();
+      if (j.error) { beat('', 'error', 'stopped', j.error); throw new Error(j.error); }
+      if (j.prop) prop = j.prop;
+      const cls = steps[i] === 'settle' ? 'verdict' : steps[i] === 'claim' ? 'paid' : '';
+      beat(cls, `${i + 1} / 4`, label[steps[i]], j.label + (j.sig ? ' · ' + tx(j.sig) : ''));
+      await wait(1400);
+    }
+    kicker.innerHTML = 'The oracle decided, not us. <b>No admin. No appeal.</b> Real transactions, no wallet.';
+    kicker.classList.add('in');
+  } catch { /* shown */ }
+  btn.disabled = false; btn.textContent = '▶ Settle another';
+  running = false;
+}
+</script>
+</body>
+</html>
