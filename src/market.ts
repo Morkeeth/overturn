@@ -31,8 +31,19 @@ export const cluster = () => (RPC.includes('devnet') ? 'devnet' : RPC.includes('
 export const explorerTx = (sig: string) =>
   `https://explorer.solana.com/tx/${sig}${cluster() === 'devnet' ? '?cluster=devnet' : ''}`;
 
-export const kc = (s: string) =>
-  execFileSync('security', ['find-generic-password', '-a', 'worldcup-agent', '-s', s, '-w'], { encoding: 'utf8' }).trim();
+export const kc = (s: string) => {
+  try {
+    return execFileSync('security', ['find-generic-password', '-a', 'worldcup-agent', '-s', s, '-w'], { encoding: 'utf8' }).trim();
+  } catch {
+    console.error(
+      `\n  This command needs a TxLINE subscription + a Solana wallet, read from the macOS\n` +
+      `  Keychain (item "${s}"). A fresh clone on another machine has neither, so it stops\n` +
+      `  here instead of crashing. The zero-setup path that needs none of this:\n\n` +
+      `      npm run replay    # naive vs guarded on the real semi-final, no key, no wallet\n`,
+    );
+    process.exit(1);
+  }
+};
 
 const mapProof = (a: any[]) => a.map((n) => ({ hash: Array.from(n.hash as number[]), isRightSibling: n.isRightSibling }));
 

@@ -21,8 +21,19 @@ const API = 'https://txline.txodds.com';
 const FIXTURE = Number(process.env.FIXTURE ?? 18241006);
 const RAW = `data/live-${FIXTURE}-scores.sse`;
 
-const kc = (s: string) =>
-  execFileSync('security', ['find-generic-password', '-a', 'worldcup-agent', '-s', s, '-w'], { encoding: 'utf8' }).trim();
+const kc = (s: string) => {
+  try {
+    return execFileSync('security', ['find-generic-password', '-a', 'worldcup-agent', '-s', s, '-w'], { encoding: 'utf8' }).trim();
+  } catch {
+    console.error(
+      `\n  live needs a TxLINE subscription + a Solana wallet, read from the macOS Keychain\n` +
+      `  (item "${s}"). A fresh clone on another machine has neither, so it stops here instead\n` +
+      `  of crashing. The zero-setup path that needs none of this:\n\n` +
+      `      npm run replay    # naive vs guarded on the real semi-final, no key, no wallet\n`,
+    );
+    process.exit(1);
+  }
+};
 
 // Props we track live. Chosen so at least one is likely to be decided tonight.
 const PROPS: Predicate[] = [

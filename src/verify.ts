@@ -20,8 +20,19 @@ const { BN } = anchor;
 const RPC = process.env.RPC_URL || 'https://api.mainnet-beta.solana.com';
 const API = 'https://txline.txodds.com';
 
-const kc = (s: string) =>
-  execFileSync('security', ['find-generic-password', '-a', 'worldcup-agent', '-s', s, '-w'], { encoding: 'utf8' }).trim();
+const kc = (s: string) => {
+  try {
+    return execFileSync('security', ['find-generic-password', '-a', 'worldcup-agent', '-s', s, '-w'], { encoding: 'utf8' }).trim();
+  } catch {
+    console.error(
+      `\n  verify needs a TxLINE subscription + a Solana wallet, read from the macOS Keychain\n` +
+      `  (item "${s}"). A fresh clone on another machine has neither, so it stops here instead\n` +
+      `  of crashing. The zero-setup path that needs none of this:\n\n` +
+      `      npm run replay    # naive vs guarded on the real semi-final, no key, no wallet\n`,
+    );
+    process.exit(1);
+  }
+};
 
 type ProofNodeRaw = { hash: number[]; isRightSibling: boolean };
 const mapProof = (arr: ProofNodeRaw[]) => arr.map((n) => ({ hash: Array.from(n.hash), isRightSibling: n.isRightSibling }));
