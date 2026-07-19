@@ -114,7 +114,9 @@ npm run agent    # an autonomous agent triages an inbox of valid proofs and sett
 npm test         # 8 firewall unit tests, incl. the 20:22:29 phantom-goal rejection — no key, offline
 ```
 
-`replay` and `npm test` need nothing. `verify` and `demo` need a TxLINE subscription (see below).
+`replay` and `npm test` need nothing. `verify`, `demo`, and `agent` need a TxLINE subscription + a
+wallet (see below); `agent` also needs a little devnet SOL. Run cold, they say so and point you back
+to `replay` rather than crashing.
 
 ### Or drive it yourself, one step at a time
 
