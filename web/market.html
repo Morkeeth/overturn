@@ -184,7 +184,7 @@
   <p class="sub" style="font-family:var(--mono);font-size:12px;color:var(--dim)">
     Needs a wallet (Phantom / Solflare) set to <b style="color:var(--mute)">devnet</b>, with a little
     devnet SOL for the fee — <a href="https://faucet.solana.com" target="_blank" rel="noopener" style="color:var(--mute);text-decoration:underline;text-underline-offset:3px">get some free here</a>.
-    No wallet, or on mainnet? The no-wallet replay at the top of the page needs neither.</p>
+    No wallet, or on mainnet? The no-wallet <b style="color:var(--mute)">Play</b> at the top of the page needs neither.</p>
   <div class="try" id="try"></div>
 </div></section>
 
@@ -580,7 +580,7 @@ async function send(action) {
     let j;
     try { j = await r.json(); }
     catch {
-      return out(`This step assembles the transaction on the app's backend (the <b>/api</b> routes), and that backend is not answering here. On a static preview with no server it never will; on the live site it does. The read-only panels on this page work either way, and the no-wallet replay at the top of the page needs no backend at all.`);
+      return out(`This step assembles the transaction on the app's backend (the <b>/api</b> routes), and that backend is not answering here. On a static preview with no server it never will; on the live site it does. The read-only chain panels on this page read Solana directly and work either way.`);
     }
     if (j.error) return out(`Could not build the transaction: ${j.error}`);
 
