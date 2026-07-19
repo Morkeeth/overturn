@@ -190,6 +190,13 @@ here asks you to take that on trust.
 | Devnet | [explorer](https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv?cluster=devnet) |
 | Upgrade authority | `9Fw49bq19uVFHHHubNSpdn3ZQGy9nFSaJeLEdDbSDK1s` |
 
+**On "no admin key":** it is precise about *settlement* — no privileged instruction, no keeper, no
+pause; nothing moves a matched pot but a proof. It is not a claim of immutability. The program is
+upgradeable (authority above), which is standard for a live program and is what lets us patch a bug
+found during judging — and which also means today's guarantees assume that key does not ship a
+malicious upgrade. Finalizing it (`--final`) would make "no admin key" unconditional, at the cost of
+the ability to fix or to reclaim rent; we keep it upgradeable through judging on purpose.
+
 ### One real prop, on mainnet, settled by TxODDS' production oracle
 
 0.1 SOL of real money went into escrow on mainnet-beta and came out the correct side, decided
@@ -215,8 +222,11 @@ solana program show HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv --url mainnet-b
 grep declare_id overturn_escrow/programs/overturn_escrow/src/lib.rs
 ```
 
-Both print `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`. A deploy log proves we published a
-program. The check above proves it is *this* program. That distinction is the whole project.
+Both print `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`. That matches the *address*, not the
+bytecode: a deploy log proves we published a program at this ID — not that its compiled bytes are
+this source. Proving that needs a verifiable build (`solana-verify verify-from-repo`), which we have
+not run. We flag the gap rather than paper over it, which is the same "published ≠ true" discipline
+the escrow itself enforces.
 
 ## TxLINE endpoints used
 
