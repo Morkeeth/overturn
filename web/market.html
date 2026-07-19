@@ -536,11 +536,13 @@ async function send(action) {
 
     out(`Sent <b>${signature}</b>\nWaiting for the cluster…`);
     const res = await confirm(signature);
-    if (res.err) {
-      const reason = readError(res);
-      out(`<b>REJECTED.</b> ${reason}\n\nThe money did not move. Nothing was verified either: all three guards run before the oracle is ever asked, so the escrow refused a proof it had no business verifying.\n\n<a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" style="color:var(--ink)">See it on the explorer</a>`);
+    const explorer = `<a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" style="color:var(--ink)">See it on the explorer</a>`;
+    if (res.timeout) {
+      out(`Sent <b>${signature}</b>\n\nThe public devnet node is slow to confirm right now, but the transaction is on-chain — open it on the explorer to see the guard reject it.\n\n${explorer}`);
+    } else if (res.err) {
+      out(`<b>REJECTED.</b> ${res.reason || 'the transaction failed'}\n\nThe money did not move, and nothing was verified: all three guards run before the oracle is ever asked, so the escrow refused a proof it had no business verifying.\n\n${explorer}`);
     } else {
-      out(`<b>ACCEPTED.</b> The escrow took it.\n\n<a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" style="color:var(--ink)">See it on the explorer</a>`);
+      out(`<b>ACCEPTED.</b> The escrow took it.\n\n${explorer}`);
       setTimeout(load, 1500);
     }
   } catch (e) {
@@ -563,13 +565,15 @@ async function legacyTx(raw) {
 }
 
 async function confirm(sig) {
-  for (let i = 0; i < 30; i++) {
+  // Confirm through our own backend, which polls devnet server-side. A browser hitting the public
+  // node's getSignatureStatuses gets rate-limited, which is why the old client-side poll just spun.
+  for (let i = 0; i < 15; i++) {
     try {
-      const r = await rpc(CLUSTERS[1].rpcs, 'getSignatureStatuses', [[sig], { searchTransactionHistory: true }]);
-      const st = r?.value?.[0];
-      if (st && (st.confirmationStatus === 'confirmed' || st.confirmationStatus === 'finalized')) return st;
+      const r = await fetch(`/api/txstatus?sig=${sig}`);
+      const j = await r.json();
+      if (j.found) return { err: j.ok ? null : (j.reason || 'the transaction failed'), reason: j.reason };
     } catch { /* keep waiting */ }
-    await new Promise((r) => setTimeout(r, 1200));
+    await new Promise((r) => setTimeout(r, 1500));
   }
   return { err: null, timeout: true };
 }
