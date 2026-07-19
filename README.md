@@ -212,9 +212,6 @@ There is a static mirror at https://morkeeth.github.io/overturn with no backend.
 still work there (they read Solana directly); the live-feed panel says it needs a backend rather
 than pretending otherwise.
 
-It is also insurance: `/api/scores/historical` serves only a two-week window, so this match ages out
-of the API around 28 July, the day before judging.
-
 ## Deployed, on mainnet, with real money
 
 `overturn_escrow` is live on **Solana mainnet-beta and devnet, at the same address**. Nothing
