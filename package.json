@@ -7,6 +7,7 @@
     "replay": "tsx src/replay.ts",
     "verify": "tsx src/verify.ts",
     "demo": "tsx src/demo.ts",
+    "agent": "tsx src/settler-agent.ts",
     "live": "tsx src/live.ts",
     "subscribe": "node subscribe.mjs",
     "build:web": "tsx src/export-demo.ts && tsx src/build-web.ts",

@@ -73,6 +73,32 @@ exists.
 Every input is checked against state frozen at creation, before anyone knew the answer. The verdict
 comes from the oracle, not the caller.
 
+## Why now: the settler agent
+
+A human catches a phantom goal — they watch the VAR replay and refuse to pay. An **autonomous
+agent** has no such instinct: it settles on whatever the feed asserts, at machine speed,
+irreversibly. The three guards are **the machine's substitute for human skepticism** — the encoded
+reasons a valid-looking proof lies: wrong match, wrong moment, wrong question.
+
+`npm run agent` is exactly that. The agent is handed an inbox of cryptographically valid TxLINE
+proofs — one from the wrong match, one from before full time, one real — and told *nothing* about
+which is correct. It runs the guards itself (`src/firewall.ts`, a provider-agnostic module), refuses
+two proofs on its own, submits the wrong-match proof on-chain to prove the escrow enforces the same
+call, then settles and pays — with no human in the loop.
+
+```
+[1] a final proof — from another match      -> REFUSE (GUARD 1 · subject binding)
+[2] a half-time proof — Spain led 1-0        -> REFUSE (GUARD 2 · finality)
+[3] a full-time proof for this match         -> ADMIT
+chain REJECTED the wrong-match proof: GUARD 1   ·   agent and chain agree
+SETTLED "Spain total goals > 2" = FALSE -> TAKER (NO) paid
+```
+
+The escrow settles a bet today. The reusable part — *verify the proof answers the exact frozen
+question* — is a **settlement firewall** any autonomous counterparty needs: pay only against a proof
+that is bound to the right subject, moment, and predicate. TxODDS sports is the first adapter; the
+guards are provider-agnostic by construction. Today there is one adapter, live on mainnet.
+
 ## Run it
 
 ```bash
@@ -81,6 +107,7 @@ npm install
 npm run replay   # the Jul-14 semi through a naive settler and the guarded gate
 npm run verify   # ask TxLINE's real mainnet oracle whether the phantom goal happened
 npm run demo     # the escrow: three attacks with genuine proofs, one honest settlement
+npm run agent    # an autonomous agent triages an inbox of valid proofs and settles the right one
 ```
 
 `replay` needs nothing. `verify` and `demo` need a TxLINE subscription (see below).
