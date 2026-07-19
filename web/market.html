@@ -197,10 +197,38 @@
   <div id="feed"></div>
 </div></section>
 
-<section><div class="wrap">
-  <h2>Mainnet receipts</h2>
-  <p class="sub">The real prop, start to finish, with real SOL. Every signature resolves.</p>
-  <div class="rcpt" id="receipts"></div>
+<section id="receipt"><div class="wrap">
+  <h2>The receipt — one real market, settled correctly on mainnet</h2>
+  <p class="sub">What the feed said, what the chain proved, and who got paid — with real SOL on
+  mainnet-beta. Every line resolves on the explorer.</p>
+
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:26px;margin-top:22px">
+    <div class="k">The question, frozen before kickoff</div>
+    <div style="font-family:var(--mono);font-weight:700;font-size:clamp(16px,2vw,20px);margin-top:6px">"Spain total goals &gt; 2" · France v Spain · full time</div>
+
+    <div class="k" style="margin-top:24px">Why it could not settle early — the 26 seconds</div>
+    <div style="margin-top:10px;font-family:var(--mono);font-size:12.5px;line-height:1.9;color:var(--mute)">
+      <div><span style="color:var(--ink)">20:22:29</span> &nbsp;the feed published Spain's 3rd goal — <b style="color:var(--ink)">0–3</b>. A naive market pays out here.</div>
+      <div><span style="color:var(--ink)">20:22:55</span> &nbsp;VAR discards it. The score reverts. It was never 3.</div>
+      <div><span style="color:var(--ink)">21:04:14</span> &nbsp;full time — the finality bar. Only now can this market settle. Spain scored <b style="color:var(--ink)">2</b>.</div>
+    </div>
+
+    <div class="k" style="margin-top:24px">The verdict — from a proof, not from us</div>
+    <div style="margin-top:8px;font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--mute)">
+      Settled by a TxLINE Merkle proof, verified on-chain via CPI into TxODDS' oracle →
+      <b style="color:var(--ink)">"Spain total goals &gt; 2" = FALSE</b>. The NO side wins.
+      <a href="https://explorer.solana.com/tx/3rmG899b3surG8YgcgCxdRtEiUoJVkuoeWY6qGzkqfCXFKDbzbuPEg9NZyQtGASGyADNkMxCFbxYRkEJGwR9yC6Z" style="color:var(--ink);text-decoration:underline;text-underline-offset:3px">settle tx ↗</a>
+    </div>
+
+    <div class="k" style="margin-top:24px">The payout</div>
+    <div style="margin-top:8px;font-family:var(--mono);font-size:13px;line-height:1.7;color:var(--mute)">
+      <b style="color:var(--ink)">0.1 SOL</b> to the NO side. No admin, no appeal.
+      <a href="https://explorer.solana.com/tx/nQJDZG6BHmwW1Lbd77RZ6P4y3PuX7wvYM8YnVhscUgiRruKGJe3pPwXzzeVCd68EBG6cUPeEpmxJ5QtTFgMGwzB" style="color:var(--ink);text-decoration:underline;text-underline-offset:3px">claim tx ↗</a>
+    </div>
+  </div>
+
+  <div class="k" style="margin-top:26px">The full trail — every signature resolves</div>
+  <div class="rcpt" id="receipts" style="margin-top:12px"></div>
   <div class="note">
     Before the honest settle, the same escrow was handed a real, valid, unforged proof from the
     <b>other</b> semi-final (England v Argentina, fixture 18241006). It clears the finality guard and
