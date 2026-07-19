@@ -2,6 +2,9 @@
 
 **A prop-bet escrow that cannot pay out on a goal that didn't happen.**
 
+> Overturn is not another oracle-powered market; it is the contract layer that prevents an
+> oracle-proof from being used to settle the wrong market, at the wrong time, under the wrong meaning.
+
 TxODDS x Solana World Cup Hackathon · Prediction Markets & Settlement track
 
 **Live app:** https://overturn-morkeeths-projects.vercel.app (no wallet, no install)
@@ -108,9 +111,10 @@ npm run replay   # the Jul-14 semi through a naive settler and the guarded gate
 npm run verify   # ask TxLINE's real mainnet oracle whether the phantom goal happened
 npm run demo     # the escrow: three attacks with genuine proofs, one honest settlement
 npm run agent    # an autonomous agent triages an inbox of valid proofs and settles the right one
+npm test         # 8 firewall unit tests, incl. the 20:22:29 phantom-goal rejection — no key, offline
 ```
 
-`replay` needs nothing. `verify` and `demo` need a TxLINE subscription (see below).
+`replay` and `npm test` need nothing. `verify` and `demo` need a TxLINE subscription (see below).
 
 ### Or drive it yourself, one step at a time
 
@@ -222,7 +226,8 @@ pause; nothing moves a matched pot but a proof. It is not a claim of immutabilit
 upgradeable (authority above), which is standard for a live program and is what lets us patch a bug
 found during judging — and which also means today's guarantees assume that key does not ship a
 malicious upgrade. Finalizing it (`--final`) would make "no admin key" unconditional, at the cost of
-the ability to fix or to reclaim rent; we keep it upgradeable through judging on purpose.
+the ability to fix or to reclaim rent; we keep it upgradeable through judging on purpose. Roadmap:
+move the upgrade authority to a time-locked multisig so change is legible and no single key is trusted.
 
 ### One real prop, on mainnet, settled by TxODDS' production oracle
 

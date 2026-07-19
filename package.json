@@ -8,6 +8,7 @@
     "verify": "tsx src/verify.ts",
     "demo": "tsx src/demo.ts",
     "agent": "tsx src/settler-agent.ts",
+    "test": "node --import tsx --test src/firewall.test.ts",
     "live": "tsx src/live.ts",
     "subscribe": "node subscribe.mjs",
     "build:web": "tsx src/export-demo.ts && tsx src/build-web.ts",
