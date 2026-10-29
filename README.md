@@ -113,8 +113,8 @@ two proofs on its own, submits the wrong-match proof on-chain to prove the escro
 call, then settles and pays ;  with no human in the loop.
 
 ```
-[1] a final proof ;  from another match      -> REFUSE (GUARD 1 · subject binding)
-[2] a half-time proof ;  Spain led 1-0        -> REFUSE (GUARD 2 · finality)
+[1] a final proof — from another match      -> REFUSE (GUARD 1 · subject binding)
+[2] a half-time proof — Spain led 1-0        -> REFUSE (GUARD 2 · finality)
 [3] a full-time proof for this match         -> ADMIT
 chain REJECTED the wrong-match proof: GUARD 1   ·   agent and chain agree
 SETTLED "Spain total goals > 2" = FALSE -> TAKER (NO) paid
@@ -135,7 +135,7 @@ npm run replay   # the Jul-14 semi through a naive settler and the guarded gate
 npm run verify   # ask TxLINE's real mainnet oracle whether the phantom goal happened
 npm run demo     # the escrow: three attacks with genuine proofs, one honest settlement
 npm run agent    # an autonomous agent triages an inbox of valid proofs and settles the right one
-npm test         # 8 firewall unit tests, incl. the 20:22:29 phantom-goal rejection ;  no key, offline
+npm test         # 8 firewall unit tests, incl. the 20:22:29 phantom-goal rejection — no key, offline
 ```
 
 `replay` and `npm test` need nothing. `verify`, `demo`, and `agent` need a TxLINE subscription + a
