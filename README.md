@@ -1,5 +1,25 @@
 # Overturn
 
+## TLDR
+
+Bind a sports-settlement proof to the market, time and meaning it is meant to settle.<br>
+For developers studying prop-bet escrow and corrected event data on Solana.<br>
+Start with the no-wallet review path; proof verification is narrower than a guarantee about every market outcome.
+
+[the market, live on chain](https://overturn-morkeeths-projects.vercel.app/market) · [the 26 seconds](https://overturn-morkeeths-projects.vercel.app/story) · [▶ Play a live market](https://overturn-morkeeths-projects.vercel.app/market#demo)
+
+## The problem and approach
+
+In the 2026 World Cup semi-final France v Spain, the live feed showed a third Spanish goal for 26 seconds before VAR discarded it; an escrow settling off that stream would have paid on a scoreline that never existed, and on-chain that cannot be undone.
+The contract has no keeper and no admin key: the only path to moving money is a Merkle proof verified on-chain against TxODDS corrected data, bound to the right market, the right time and the right meaning.
+Built for the TxODDS x Solana World Cup Hackathon, live on mainnet-beta; play a market with no wallet at https://overturn-morkeeths-projects.vercel.app
+
+## Review and pick up the work
+
+[Agent guide](AGENTS.md)
+
+Start with the linked source, setup and evidence. Recorded demos and sample data keep their original scope; use the repository instructions for a fresh run.
+
 **A prop-bet escrow that cannot pay out on a goal that didn't happen.**
 
 > Overturn is not another oracle-powered market; it is the contract layer that prevents an
@@ -11,8 +31,8 @@ TxODDS x Solana World Cup Hackathon · Prediction Markets & Settlement track
 · [the market, live on chain](https://overturn-morkeeths-projects.vercel.app/market)
 · [the 26 seconds](https://overturn-morkeeths-projects.vercel.app/story)
 
-**Reviewing this repo (human or LLM)?** Start with **[`AGENTS.md`](AGENTS.md)** — it orients you in one
-pass and every claim is verifiable. **Try it live:** [▶ Play a live market](https://overturn-morkeeths-projects.vercel.app/market#demo) — a real market, start to finish, no wallet.
+**Reviewing this repo (human or LLM)?** Start with **[`AGENTS.md`](AGENTS.md)** ;  it orients you in one
+pass and every claim is verifiable. **Try it live:** [▶ Play a live market](https://overturn-morkeeths-projects.vercel.app/market#demo) ;  a real market, start to finish, no wallet.
 
 **Program:** [`HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`](https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv), live on **mainnet-beta** and devnet at the same address, holding a real settled prop.
 
@@ -81,16 +101,16 @@ comes from the oracle, not the caller.
 
 ## Why now: the settler agent
 
-A human catches a phantom goal — they watch the VAR replay and refuse to pay. An **autonomous
+A human catches a phantom goal ;  they watch the VAR replay and refuse to pay. An **autonomous
 agent** has no such instinct: it settles on whatever the feed asserts, at machine speed,
-irreversibly. The three guards are **the machine's substitute for human skepticism** — the encoded
+irreversibly. The three guards are **the machine's substitute for human skepticism** ;  the encoded
 reasons a valid-looking proof lies: wrong match, wrong moment, wrong question.
 
 `npm run agent` is exactly that. The agent is handed an inbox of cryptographically valid TxLINE
-proofs — one from the wrong match, one from before full time, one real — and told *nothing* about
+proofs ;  one from the wrong match, one from before full time, one real ;  and told *nothing* about
 which is correct. It runs the guards itself (`src/firewall.ts`, a provider-agnostic module), refuses
 two proofs on its own, submits the wrong-match proof on-chain to prove the escrow enforces the same
-call, then settles and pays — with no human in the loop.
+call, then settles and pays ;  with no human in the loop.
 
 ```
 [1] a final proof — from another match      -> REFUSE (GUARD 1 · subject binding)
@@ -100,8 +120,8 @@ chain REJECTED the wrong-match proof: GUARD 1   ·   agent and chain agree
 SETTLED "Spain total goals > 2" = FALSE -> TAKER (NO) paid
 ```
 
-The escrow settles a bet today. The reusable part — *verify the proof answers the exact frozen
-question* — is a **settlement firewall** any autonomous counterparty needs: pay only against a proof
+The escrow settles a bet today. The reusable part ;  *verify the proof answers the exact frozen
+question* ;  is a **settlement firewall** any autonomous counterparty needs: pay only against a proof
 that is bound to the right subject, moment, and predicate. TxODDS sports is the first adapter; the
 guards are provider-agnostic by construction. Today there is one adapter, live on mainnet.
 
@@ -224,10 +244,10 @@ here asks you to take that on trust.
 | Devnet | [explorer](https://explorer.solana.com/address/HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv?cluster=devnet) |
 | Upgrade authority | `9Fw49bq19uVFHHHubNSpdn3ZQGy9nFSaJeLEdDbSDK1s` |
 
-**On "no admin key":** it is precise about *settlement* — no privileged instruction, no keeper, no
+**On "no admin key":** it is precise about *settlement* ;  no privileged instruction, no keeper, no
 pause; nothing moves a matched pot but a proof. It is not a claim of immutability. The program is
 upgradeable (authority above), which is standard for a live program and is what lets us patch a bug
-found during judging — and which also means today's guarantees assume that key does not ship a
+found during judging ;  and which also means today's guarantees assume that key does not ship a
 malicious upgrade. Finalizing it (`--final`) would make "no admin key" unconditional, at the cost of
 the ability to fix or to reclaim rent; we keep it upgradeable through judging on purpose. Roadmap:
 move the upgrade authority to a time-locked multisig so change is legible and no single key is trusted.
@@ -258,7 +278,7 @@ grep declare_id overturn_escrow/programs/overturn_escrow/src/lib.rs
 ```
 
 Both print `HhqbLLnNujBFmzRM97xEHM2zKfrqefcbAsXbgoLnxzdv`. That matches the *address*, not the
-bytecode: a deploy log proves we published a program at this ID — not that its compiled bytes are
+bytecode: a deploy log proves we published a program at this ID ;  not that its compiled bytes are
 this source. Proving that needs a verifiable build (`solana-verify verify-from-repo`), which we have
 not run. We flag the gap rather than paper over it, which is the same "published ≠ true" discipline
 the escrow itself enforces.
@@ -299,7 +319,7 @@ Offered as genuine feedback, not complaint. The data layer is good; the docs are
 
 ## Architecture
 
-**Diagrams (rendered): [`ARCHITECTURE.md`](ARCHITECTURE.md)** — the guarded settle path, the prop
+**Diagrams (rendered): [`ARCHITECTURE.md`](ARCHITECTURE.md)** ;  the guarded settle path, the prop
 lifecycle, and the whole thesis on one page.
 
 ```
@@ -334,3 +354,7 @@ TxLINE Merkle proof ──> overturn_escrow::settle ──CPI──> txoracle::v
 ## Licence
 
 MIT
+
+## License and data boundaries
+
+This checkout has no root license file establishing general reuse rights. Data, provider responses, media, fonts and other third-party assets may have separate terms. Repository access alone does not grant rights to those materials. 
