@@ -1,6 +1,11 @@
 # Overturn
 
-**A prop-bet escrow that cannot pay out on a goal that didn't happen.**
+**Overturn is a prop-bet escrow on Solana that cannot pay out on a goal that didn't happen.**
+
+In the 2026 World Cup semi-final France v Spain, the live feed showed a third Spanish goal for 26 seconds before VAR discarded it; an escrow settling off that stream would have paid on a scoreline that never existed, and on-chain that cannot be undone.
+For anyone building prediction markets or settlement on live sports data.
+The contract has no keeper and no admin key: the only path to moving money is a Merkle proof verified on-chain against TxODDS corrected data, bound to the right market, the right time and the right meaning.
+Built for the TxODDS x Solana World Cup Hackathon, live on mainnet-beta; play a market with no wallet at https://overturn-morkeeths-projects.vercel.app
 
 > Overturn is not another oracle-powered market; it is the contract layer that prevents an
 > oracle-proof from being used to settle the wrong market, at the wrong time, under the wrong meaning.
